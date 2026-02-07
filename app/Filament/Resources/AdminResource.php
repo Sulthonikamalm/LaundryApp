@@ -44,6 +44,11 @@ class AdminResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('username')
+                            ->label('Username')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(50),
                         Forms\Components\TextInput::make('phone_number')
                             ->tel()
                             ->maxLength(20),
@@ -54,22 +59,33 @@ class AdminResource extends Resource
                                 'courier' => 'Kurir',
                             ])
                             ->required(),
-                        Forms\Components\TextInput::make('password')
-                            ->password()
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (string $context): bool => $context === 'create'),
-                        Forms\Components\TextInput::make('pin')
-                            ->label('PIN (6 Digit untuk Kurir)')
-                            ->password()
-                            ->maxLength(6)
-                            ->minLength(6)
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (callable $get) => $get('role') === 'courier'),
                         Forms\Components\Toggle::make('is_active')
                             ->label('Aktif')
                             ->default(true),
+                    ])->columns(2),
+                
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\Placeholder::make('credential_info')
+                            ->label('')
+                            ->content('⚠️ Password dan PIN tersimpan terenkripsi. Isi field di bawah hanya jika ingin MENGGANTI.'),
+                        Forms\Components\TextInput::make('password')
+                            ->label('Password Baru')
+                            ->password()
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create')
+                            ->helperText(fn (string $context) => $context === 'edit' ? 'Kosongkan jika tidak ingin ubah' : ''),
+                        Forms\Components\TextInput::make('pin')
+                            ->label('PIN Baru (6 Digit untuk Kurir)')
+                            ->password()
+                            ->maxLength(6)
+                            ->minLength(6)
+                            ->numeric()
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (callable $get, string $context) => $context === 'create' && $get('role') === 'courier')
+                            ->helperText(fn (string $context) => $context === 'edit' ? 'Kosongkan jika tidak ingin ubah' : ''),
                     ])->columns(2),
             ]);
     }

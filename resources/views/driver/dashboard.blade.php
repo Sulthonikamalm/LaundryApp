@@ -64,7 +64,7 @@
                         </div>
                         
                         <h3 class="text-xl font-bold text-brand-black mb-1">{{ $shipment->transaction->customer->name }}</h3>
-                        <p class="text-sm text-brand-dark leading-relaxed mb-6 opacity-80">{{ $shipment->address }}</p>
+                        <p class="text-sm text-brand-dark leading-relaxed mb-6 opacity-80">{{ $shipment->customer_address }}</p>
 
                         <a href="{{ route('driver.delivery.show', $shipment->transaction_id) }}" class="flex items-center justify-center w-full py-4 bg-brand-black text-brand-white font-bold rounded-xl active:bg-brand-dark transition-all shadow-lg">
                             Lanjutkan Pengiriman

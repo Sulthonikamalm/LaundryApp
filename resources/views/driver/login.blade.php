@@ -33,6 +33,25 @@
                 @csrf
                 
                 <div>
+                    <label class="block text-xs font-bold text-brand-surface uppercase tracking-wider mb-2 ml-1">Username / Email</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-brand-primary group-focus-within:text-brand-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            name="username"
+                            value="{{ old('username') }}"
+                            class="block w-full pl-11 pr-4 py-4 bg-brand-black/50 border border-brand-deep rounded-xl text-white placeholder-brand-surface/30 focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all duration-200"
+                            placeholder="driver1"
+                            required
+                            autofocus
+                        >
+                    </div>
+                    @error('username') <p class="text-red-400 text-xs mt-1 ml-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="block text-xs font-bold text-brand-surface uppercase tracking-wider mb-2 ml-1">PIN Akses</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -46,9 +65,9 @@
                             maxlength="6"
                             inputmode="numeric"
                             required
-                            autofocus
                         >
                     </div>
+                    @error('pin') <p class="text-red-400 text-xs mt-1 ml-1">{{ $message }}</p> @enderror
                 </div>
 
                 <button 

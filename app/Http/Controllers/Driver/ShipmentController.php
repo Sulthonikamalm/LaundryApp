@@ -42,12 +42,12 @@ class ShipmentController extends Controller
 
         // DeepPerformance: Cache dashboard data for 30 seconds
         $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function () use ($driver) {
-            // Transaksi yang siap dikirim (status = ready) tanpa shipment delivered
+            // Transaksi yang siap dikirim (status = ready) tanpa shipment completed
             $pendingDeliveries = Transaction::with(['customer:id,name,address,phone_number'])
                 ->select(['id', 'transaction_code', 'customer_id', 'estimated_completion_date'])
                 ->where('status', 'ready')
                 ->whereDoesntHave('shipments', function ($query) {
-                    $query->where('status', 'delivered');
+                    $query->where('status', 'completed'); // Fixed: was 'delivered'
                 })
                 ->orderBy('estimated_completion_date', 'asc')
                 ->limit(20) // DeepPerformance: Limit to 20 items
@@ -55,8 +55,8 @@ class ShipmentController extends Controller
 
             // Pengiriman hari ini yang ditangani driver ini
             $myDeliveries = Shipment::with(['transaction:id,transaction_code,customer_id', 'transaction.customer:id,name,address'])
-                ->select(['id', 'transaction_id', 'status', 'address', 'created_at'])
-                ->where('assigned_driver_id', $driver->id)
+                ->select(['id', 'transaction_id', 'status', 'customer_address', 'created_at']) // Fixed: customer_address
+                ->where('courier_id', $driver->id) // Fixed: was assigned_driver_id
                 ->whereDate('created_at', today())
                 ->orderBy('created_at', 'desc')
                 ->limit(15)
@@ -94,11 +94,11 @@ class ShipmentController extends Controller
         // Create shipment record
         Shipment::create([
             'transaction_id' => $transaction->id,
-            'assigned_driver_id' => $driver->id,
+            'courier_id' => $driver->id, // Fixed: was assigned_driver_id
             'shipment_type' => 'delivery',
-            'status' => 'picked_up',
-            'picked_up_at' => now(),
-            'address' => $transaction->customer->address,
+            'status' => 'in_progress', // Fixed: actual enum value
+            'scheduled_at' => now(),
+            'customer_address' => $transaction->customer->address, // Fixed: was address
         ]);
 
         return redirect()->route('driver.delivery.show', $transaction)
@@ -116,7 +116,7 @@ class ShipmentController extends Controller
         $transaction->load(['customer', 'details.service', 'shipments']);
         
         $shipment = $transaction->shipments()
-            ->where('assigned_driver_id', auth()->guard('driver')->id())
+            ->where('courier_id', auth()->guard('driver')->id()) // Fixed: was assigned_driver_id
             ->latest()
             ->first();
 
@@ -146,8 +146,8 @@ class ShipmentController extends Controller
         $driver = auth()->guard('driver')->user();
 
         $shipment = Shipment::where('transaction_id', $transaction->id)
-            ->where('assigned_driver_id', $driver->id)
-            ->where('status', '!=', 'delivered')
+            ->where('courier_id', $driver->id) // Fixed: was assigned_driver_id
+            ->where('status', '!=', 'completed') // Fixed: was 'delivered'
             ->firstOrFail();
 
         // DeepDive: Upload ke Cloudinary dengan optimasi
@@ -158,10 +158,10 @@ class ShipmentController extends Controller
 
         // Update shipment
         $shipment->update([
-            'status' => 'delivered',
-            'delivered_at' => now(),
-            'proof_image_url' => $proofUrl,
-            'delivery_notes' => $validated['notes'] ?? null,
+            'status' => 'completed', // Fixed: was 'delivered'
+            'completed_at' => now(), // Fixed: was 'delivered_at'
+            'photo_proof_url' => $proofUrl, // Fixed: was 'proof_image_url'
+            'notes' => $validated['notes'] ?? null, // Fixed: was 'delivery_notes'
         ]);
 
         // DeepState: Auto-update transaction status

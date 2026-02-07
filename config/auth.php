@@ -46,6 +46,12 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+
+        // Guard khusus untuk Driver/Courier Portal
+        'driver' => [
+            'driver' => 'session',
+            'provider' => 'admins', // Uses same model (Admin with role=courier)
+        ],
     ],
 
     /*
