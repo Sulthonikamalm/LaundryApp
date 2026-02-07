@@ -54,7 +54,8 @@
                             name="transaction_code"
                             value="{{ old('transaction_code', $transaction_code ?? '') }}"
                             style="display: block; width: 100%; padding: 1.25rem 1rem 1.25rem 3.5rem; background-color: var(--brand-bg); border-radius: 1rem; border: 2px solid transparent; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 1.125rem; font-weight: 500; color: var(--brand-black); transition: all 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);"
-                            placeholder="LDR-XXXX-XXXX"
+                            placeholder="LDR-2026-0001"
+                            maxlength="20"
                             required
                             autocomplete="off"
                             onfocus="this.style.borderColor='rgba(76,125,115,0.2)'; this.style.backgroundColor='#fff'; this.style.boxShadow='0 0 0 4px rgba(76,125,115,0.05)';"
@@ -141,17 +142,24 @@
     // 1. TRANSACTION CODE AUTO-UPPERCASE
     // ============================================
     if (txCodeInput) {
+        // Only allow alphanumeric and dashes
         txCodeInput.addEventListener('input', (e) => {
+            // Allow manual dashes, just uppercase and filter invalid chars
             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
         });
 
-        // Auto-add dashes for LDR format
+        // Auto-add dashes for LDR-YYYY-XXXX format (when typing without dashes)
         txCodeInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Backspace') return;
-            const val = e.target.value.replace(/-/g, '');
-            if (val.length >= 3 && val.length < 7) {
-                e.target.value = val.slice(0, 3) + '-' + val.slice(3);
-            } else if (val.length >= 7) {
+            if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '-') return;
+            
+            // Don't auto-format if user already typed a dash manually
+            if (e.target.value.includes('-')) return;
+            
+            const val = e.target.value;
+            // Format: LDR (3) + YYYY (4) + XXXX (4) = 11 chars without dashes
+            if (val.length === 3) {
+                e.target.value = val + '-';
+            } else if (val.length === 8) {
                 e.target.value = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
             }
         });
@@ -208,11 +216,11 @@
     // ============================================
     if (form) {
         form.addEventListener('submit', (e) => {
-            // Validate transaction code
-            const txCode = txCodeInput?.value.replace(/-/g, '');
-            if (!txCode || txCode.length < 8) {
+            // Validate transaction code - minimum format LDR-YYYY-XXXX
+            const txCode = txCodeInput?.value.trim();
+            if (!txCode || txCode.length < 10) {  // "LDR-2026-1" = 10 chars minimum
                 e.preventDefault();
-                showInputError(txCodeInput, 'Kode nota tidak lengkap');
+                showInputError(txCodeInput, 'Kode nota tidak lengkap (format: LDR-YYYY-XXXX)');
                 txCodeInput?.focus();
                 return;
             }
