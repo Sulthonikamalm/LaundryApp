@@ -24,6 +24,10 @@ Route::get('/login', function () {
     return redirect()->route('filament.auth.login');
 })->name('login');
 
+// Payment Gateway Routes
+Route::post('/payment/token/{transaction}', [\App\Http\Controllers\Public\MidtransController::class, 'createSnapToken'])
+    ->name('public.payment.token');
+
 // 2. DRIVER AUTH (Guest)
 Route::prefix('driver')->name('driver.')->group(function () {
     Route::get('/login', [DriverAuthController::class, 'showLogin'])->name('login');

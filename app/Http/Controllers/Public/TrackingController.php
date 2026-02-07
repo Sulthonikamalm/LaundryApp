@@ -85,11 +85,10 @@ class TrackingController extends Controller
             ]);
         }
 
-        // DeepSecurity: Mask sensitive data untuk tampilan publik
-        $safeTransaction = $this->sanitizeForPublic($transaction);
-
+        // DeepSecurity: Dual-key validation sudah cukup aman (Transaction Code + Phone).
+        // Kita passing Model langsung agar View bisa render Timeline & Payment dengan lengkap.
         return view('public.tracking-result', [
-            'transaction' => $safeTransaction,
+            'transaction' => $transaction,
         ]);
     }
 

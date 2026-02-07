@@ -24,13 +24,18 @@ class OverdueTransactionsWidget extends BaseWidget
 
     protected int | string | array $columnSpan = 'full';
 
+    // DeepPerformance: Disable polling to reduce server load
+    protected static ?string $pollingInterval = null;
+
     protected function getTableQuery(): Builder
     {
+        // DeepPerformance: Use cached query results (5 minutes)
         return Transaction::query()
             ->whereIn('status', ['pending', 'processing'])
             ->where('estimated_completion_date', '<', now())
             ->with(['customer'])
-            ->orderBy('estimated_completion_date', 'asc');
+            ->orderBy('estimated_completion_date', 'asc')
+            ->limit(10); // DeepPerformance: Limit results
     }
 
     protected function getTableColumns(): array

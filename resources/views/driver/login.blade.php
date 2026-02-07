@@ -1,75 +1,68 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Kurir | LaundryApp</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
-</head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-4">
-    <div class="w-full max-w-sm">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <div class="text-5xl mb-2">🚚</div>
-            <h1 class="text-2xl font-bold text-white">Driver Portal</h1>
-            <p class="text-indigo-200 text-sm">Masuk dengan PIN Anda</p>
+@extends('layouts.minimal', ['title' => 'Login Staff Laundry'])
+
+@section('content')
+<div class="min-h-screen flex flex-col items-center justify-center p-6 bg-brand-black text-brand-white relative">
+    
+    <!-- Background Texture -->
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#4c7d73 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="absolute top-0 w-full h-1/2 bg-gradient-to-b from-brand-deep/20 to-transparent pointer-events-none"></div>
+
+    <div class="w-full max-w-sm z-10">
+        <!-- Brand Header -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-deep rounded-2xl mb-4 text-brand-accent shadow-glow border border-brand-primary">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <h1 class="font-display text-2xl font-bold tracking-wide">Portal Kurir</h1>
+            <p class="text-brand-surface opacity-60 text-sm mt-1">Akses khusus staf internal</p>
         </div>
 
         <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-2xl p-6">
-            @if($errors->any())
-                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-600">{{ $errors->first() }}</p>
+        <div class="bg-brand-dark/50 backdrop-blur-md border border-brand-deep rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <!-- Glow Effect -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand-accent rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
+
+            @if(session('error'))
+                <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span class="text-sm text-red-200">{{ session('error') }}</span>
                 </div>
             @endif
 
-            <form action="{{ route('driver.login.submit') }}" method="POST">
+            <form action="{{ route('driver.login.submit') }}" method="POST" class="space-y-6">
                 @csrf
                 
-                <!-- Username -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Username / Email</label>
-                    <input 
-                        type="text" 
-                        name="username"
-                        value="{{ old('username') }}"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Masukkan username"
-                        required
-                    >
+                <div>
+                    <label class="block text-xs font-bold text-brand-surface uppercase tracking-wider mb-2 ml-1">PIN Akses</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-brand-primary group-focus-within:text-brand-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <input 
+                            type="password" 
+                            name="pin"
+                            class="block w-full pl-11 pr-4 py-4 bg-brand-black/50 border border-brand-deep rounded-xl text-white placeholder-brand-surface/30 focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all duration-200 font-mono text-center text-2xl tracking-widest"
+                            placeholder="••••••"
+                            maxlength="6"
+                            inputmode="numeric"
+                            required
+                            autofocus
+                        >
+                    </div>
                 </div>
 
-                <!-- PIN -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">PIN (6 digit)</label>
-                    <input 
-                        type="password" 
-                        name="pin"
-                        pattern="[0-9]{6}"
-                        maxlength="6"
-                        inputmode="numeric"
-                        class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center text-2xl tracking-[0.5em] font-mono"
-                        placeholder="● ● ● ● ● ●"
-                        required
-                    >
-                </div>
-
-                <!-- Submit -->
                 <button 
                     type="submit"
-                    class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+                    class="w-full py-4 bg-brand-primary hover:bg-brand-medium text-white font-bold rounded-xl shadow-lg shadow-brand-primary/20 transition-all transform hover:translate-y-[-2px] active:translate-y-[0px]"
                 >
-                    Masuk
+                    Masuk Portal
                 </button>
             </form>
         </div>
 
-        <!-- Footer -->
-        <p class="text-center text-indigo-200 text-xs mt-6">
-            Hubungi admin jika lupa PIN
+        <p class="mt-8 text-center text-xs text-brand-surface opacity-40">
+            Lupa PIN? Hubungi Owner
         </p>
     </div>
-</body>
-</html>
+</div>
+@endsection

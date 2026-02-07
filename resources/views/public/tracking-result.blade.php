@@ -1,246 +1,247 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Status Cucian {{ $transaction['transaction_code'] }} | LaundryApp</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .step-line { height: 3px; }
-        .step-active { background-color: #10B981; }
-        .step-inactive { background-color: #E5E7EB; }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="gradient-bg text-white py-6 px-4">
-        <div class="max-w-md mx-auto">
-            <a href="{{ route('public.tracking') }}" class="inline-flex items-center text-sm opacity-80 hover:opacity-100 mb-2">
-                ← Cari Lagi
-            </a>
-            <h1 class="text-xl font-bold">{{ $transaction['transaction_code'] }}</h1>
-            <p class="text-sm opacity-90">{{ $transaction['customer_name'] }}</p>
-        </div>
+@extends('layouts.minimal', ['title' => 'Detail Cucian - ' . $transaction->transaction_code])
+
+@section('content')
+<div class="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-brand-white">
+    <!-- Header Back -->
+    <div class="max-w-4xl mx-auto mb-8">
+        <a href="{{ route('public.tracking') }}" class="inline-flex items-center text-sm font-medium text-brand-dark hover:text-brand-primary transition-colors">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Kembali ke Pencarian
+        </a>
     </div>
 
-    <!-- Main Content -->
-    <div class="max-w-md mx-auto px-4 py-6 space-y-4">
-
-        <!-- Status Stepper -->
-        <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">Status Pesanan</h2>
+    <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Status Timeline & Summary -->
+        <div class="lg:col-span-2 space-y-8">
             
-            @php
-                $steps = [
-                    'pending' => ['icon' => '📋', 'label' => 'Diterima'],
-                    'processing' => ['icon' => '🧼', 'label' => 'Proses'],
-                    'ready' => ['icon' => '✅', 'label' => 'Siap'],
-                    'completed' => ['icon' => '🏠', 'label' => 'Selesai'],
-                ];
-                $currentIndex = array_search($transaction['status'], array_keys($steps));
-                $isCancelled = $transaction['status'] === 'cancelled';
-            @endphp
-
-            @if($isCancelled)
-                <div class="text-center py-4">
-                    <div class="text-4xl mb-2">❌</div>
-                    <p class="text-red-600 font-semibold">Pesanan Dibatalkan</p>
-                </div>
-            @else
-                <div class="flex justify-between items-center relative">
-                    <!-- Progress Line -->
-                    <div class="absolute top-5 left-0 right-0 h-1 flex -z-10">
-                        @foreach(array_keys($steps) as $index => $key)
-                            @if($index < count($steps) - 1)
-                                <div class="flex-1 step-line {{ $index < $currentIndex ? 'step-active' : 'step-inactive' }}"></div>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <!-- Steps -->
-                    @foreach($steps as $key => $step)
-                        @php
-                            $stepIndex = array_search($key, array_keys($steps));
-                            $isActive = $stepIndex <= $currentIndex;
-                            $isCurrent = $stepIndex === $currentIndex;
-                        @endphp
-                        <div class="flex flex-col items-center {{ $isCurrent ? 'pulse' : '' }}">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl 
-                                {{ $isActive ? 'bg-green-100' : 'bg-gray-100' }} 
-                                {{ $isCurrent ? 'ring-4 ring-green-300' : '' }}">
-                                {{ $step['icon'] }}
-                            </div>
-                            <span class="text-xs font-medium mt-2 {{ $isActive ? 'text-green-700' : 'text-gray-400' }}">
-                                {{ $step['label'] }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-
-                <!-- Current Status Message -->
-                <div class="mt-6 p-4 rounded-xl {{ $transaction['status'] === 'ready' ? 'bg-green-50 border border-green-200' : 'bg-gray-50' }}">
-                    <p class="text-center font-medium {{ $transaction['status'] === 'ready' ? 'text-green-700' : 'text-gray-700' }}">
-                        {{ $transaction['status_label'] }}
-                    </p>
-                    @if($transaction['status'] === 'ready')
-                        <p class="text-center text-sm text-green-600 mt-1">
-                            Cucian Anda sudah selesai dan siap diambil/diantar! 🎉
-                        </p>
-                    @endif
-                </div>
-            @endif
-        </div>
-
-        <!-- Order Details -->
-        <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Detail Pesanan</h2>
-            
-            <div class="space-y-3">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Tanggal Order</span>
-                    <span class="font-medium">{{ $transaction['order_date'] }}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">Estimasi Selesai</span>
-                    <span class="font-medium">{{ $transaction['estimated_completion'] ?? '-' }}</span>
-                </div>
-                <hr class="my-3">
+            <!-- Status Card -->
+            <div class="bg-white rounded-3xl shadow-soft p-8 border border-brand-surface relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-surface rounded-bl-full opacity-20 pointer-events-none"></div>
                 
-                <!-- Items -->
-                @foreach($transaction['items'] as $item)
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-700">{{ $item['service'] }}</span>
-                        <span class="text-gray-500">{{ $item['quantity'] }} {{ $item['unit'] }}</span>
+                <h2 class="font-display text-2xl font-bold text-brand-black mb-1">Status Pesanan</h2>
+                <p class="text-sm text-brand-dark mb-8">Update terakhir: {{ $transaction->updated_at->format('d M Y, H:i') }}</p>
+
+                <!-- Visual Timeline -->
+                <div class="relative pl-8 border-l-2 border-brand-surface space-y-10">
+                    <!-- Step 1: Pending -->
+                    <div class="relative">
+                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['pending', 'processing', 'ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
+                            @if(in_array($transaction->status, ['pending', 'processing', 'ready', 'completed']))
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            @else
+                                <span class="text-xs font-bold">1</span>
+                            @endif
+                        </div>
+                        <h3 class="text-lg font-bold text-brand-black">Pesanan Diterima</h3>
+                        <p class="text-sm text-brand-dark">Laundry Anda telah kami terima.</p>
                     </div>
-                @endforeach
+
+                    <!-- Step 2: Processing -->
+                    <div class="relative">
+                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
+                            @if(in_array($transaction->status, ['processing', 'ready', 'completed']))
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            @else
+                                <span class="text-xs font-bold">2</span>
+                            @endif
+                        </div>
+                        <h3 class="{{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Sedang Dicuci</h3>
+                        <p class="text-sm {{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'text-brand-dark' : 'text-brand-dark/60' }}">Pakaian sedang dalam proses pencucian & setrika.</p>
+                    </div>
+
+                    <!-- Step 3: Ready -->
+                    <div class="relative">
+                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
+                             @if(in_array($transaction->status, ['ready', 'completed']))
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            @else
+                                <span class="text-xs font-bold">3</span>
+                            @endif
+                        </div>
+                        <h3 class="{{ in_array($transaction->status, ['ready', 'completed']) ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Siap Diambil / Diantar</h3>
+                        <p class="text-sm {{ in_array($transaction->status, ['ready', 'completed']) ? 'text-brand-dark' : 'text-brand-dark/60' }}">Laundry bersih, wangi, dan siap kembali ke Anda.</p>
+                    </div>
+
+                    <!-- Step 4: Completed -->
+                    <div class="relative">
+                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ $transaction->status == 'completed' ? 'bg-brand-accent text-white border-4 border-white shadow-glow' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
+                             @if($transaction->status == 'completed')
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            @else
+                                <span class="text-xs font-bold">4</span>
+                            @endif
+                        </div>
+                        <h3 class="{{ $transaction->status == 'completed' ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Selesai</h3>
+                        <p class="text-sm text-brand-dark/60">Terima kasih telah mempercayakan laundry Anda.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Detail -->
+            <div class="bg-white rounded-3xl shadow-soft border border-brand-surface overflow-hidden">
+                <div class="px-8 py-6 border-b border-brand-surface bg-brand-subtle/30">
+                    <h3 class="font-display text-lg font-bold text-brand-black">Rincian Layanan</h3>
+                </div>
+                <div class="p-8">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-brand-dark text-xs uppercase bg-brand-subtle/50 rounded-lg">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold rounded-l-lg">Layanan</th>
+                                <th class="px-4 py-3 font-semibold text-center">Qty</th>
+                                <th class="px-4 py-3 font-semibold text-right rounded-r-lg">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-surface">
+                            @foreach($transaction->details as $detail)
+                            <tr>
+                                <td class="px-4 py-4 font-medium text-brand-black">
+                                    {{ $detail->service->service_name }}
+                                    <div class="text-xs text-brand-dark font-normal mt-0.5">{{ $detail->service->unit }} • Rp {{ number_format($detail->price_at_transaction, 0, ',', '.') }}</div>
+                                </td>
+                                <td class="px-4 py-4 text-center text-brand-dark">{{ $detail->quantity }}</td>
+                                <td class="px-4 py-4 text-right font-bold text-brand-black">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="border-t-2 border-brand-surface">
+                            <tr>
+                                <td colspan="2" class="px-4 pt-6 text-right font-medium text-brand-dark">Total Tagihan</td>
+                                <td class="px-4 pt-6 text-right text-xl font-display font-bold text-brand-primary">Rp {{ number_format($transaction->total_cost, 0, ',', '.') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Payment Status -->
-        <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Pembayaran</h2>
+        <!-- Right Column: Info & Payment -->
+        <div class="space-y-8">
             
-            <div class="flex items-center justify-between">
-                <div>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                        {{ $transaction['payment_status'] === 'paid' ? 'bg-green-100 text-green-700' : '' }}
-                        {{ $transaction['payment_status'] === 'partial' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                        {{ $transaction['payment_status'] === 'unpaid' ? 'bg-red-100 text-red-700' : '' }}">
-                        {{ $transaction['payment_status_label'] }}
-                    </span>
-                </div>
-                @if($transaction['remaining_balance'] > 0)
-                    <div class="text-right">
-                        <p class="text-xs text-gray-500">Sisa Tagihan</p>
-                        <p class="text-lg font-bold text-red-600">
-                            Rp {{ number_format($transaction['remaining_balance'], 0, ',', '.') }}
-                        </p>
+            <!-- Customer Info -->
+            <div class="bg-white rounded-3xl shadow-soft p-8 border border-brand-surface">
+                <h3 class="font-display text-lg font-bold text-brand-black mb-6">Informasi Pelanggan</h3>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 rounded-full bg-brand-subtle flex items-center justify-center text-brand-primary mr-3 flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-brand-dark">Nama Pelanggan</p>
+                            <p class="font-semibold text-brand-black">{{ $transaction->customer->name }}</p>
+                        </div>
                     </div>
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 rounded-full bg-brand-subtle flex items-center justify-center text-brand-primary mr-3 flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-brand-dark">Kode Nota</p>
+                            <p class="font-family-mono font-bold text-brand-black">{{ $transaction->transaction_code }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Card -->
+            <div class="bg-gradient-to-br from-brand-primary to-brand-deep rounded-3xl shadow-lg p-8 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                
+                <h3 class="font-display text-lg font-bold mb-1 opacity-90">Status Pembayaran</h3>
+                
+                @if($transaction->payment_status == 'paid')
+                    <div class="mt-4 flex items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-brand-deep mr-3 shadow-glow">
+                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-lg">LUNAS</p>
+                            <p class="text-xs opacity-75">Terima kasih atas pembayaran Anda</p>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-4 mb-6">
+                        <p class="text-3xl font-display font-bold mb-1">Rp {{ number_format($transaction->total_cost - $transaction->total_paid, 0, ',', '.') }}</p>
+                        <p class="text-sm opacity-75">Sisa tagihan yang harus dibayar</p>
+                    </div>
+                    
+                    <button 
+                        id="pay-button" 
+                        class="w-full py-4 bg-white text-brand-deep font-bold rounded-xl shadow-lg hover:bg-brand-surface transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 ring-2 ring-transparent focus:ring-white"
+                    >
+                        <span class="text-lg">Bayar Online (QRIS)</span>
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </button>
+                    <div id="payment-loading" class="hidden text-center mt-3 text-sm opacity-80 animate-pulse">Menghubungkan ke Payment Gateway...</div>
                 @endif
             </div>
 
-            @if($transaction['remaining_balance'] > 0 && !$isCancelled)
-                <button 
-                    id="pay-button"
-                    class="mt-4 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition shadow-lg">
-                    💳 Bayar Sekarang
-                </button>
-            @endif
-        </div>
-
-        <!-- Delivery Proof (if delivered) -->
-        @if($transaction['shipment'] && $transaction['shipment']['status'] === 'delivered')
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Bukti Pengiriman</h2>
-                
-                <div class="text-center">
-                    <p class="text-sm text-gray-500 mb-2">
-                        Diantar pada {{ $transaction['shipment']['delivered_at'] }}
-                    </p>
-                    @if($transaction['shipment']['proof_url'])
-                        <img 
-                            src="{{ $transaction['shipment']['proof_url'] }}" 
-                            alt="Bukti Pengiriman"
-                            class="rounded-xl mx-auto max-h-64 object-cover"
-                        >
-                    @endif
-                </div>
-            </div>
-        @endif
-
-        <!-- Feedback CTA (if completed) -->
-        @if($transaction['status'] === 'completed')
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl shadow-lg p-6 text-white text-center">
-                <p class="font-semibold mb-2">Terima kasih telah menggunakan layanan kami! 🙏</p>
-                <p class="text-sm opacity-90 mb-4">Ada masukan atau komplain? Hubungi kami langsung.</p>
-                <a 
-                    href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20memberikan%20feedback%20untuk%20pesanan%20{{ $transaction['transaction_code'] }}"
-                    target="_blank"
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl hover:bg-gray-100 transition">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                    Chat WhatsApp
+            <!-- Help Contact -->
+            <div class="text-center">
+                <a href="https://wa.me/6281234567890" class="inline-flex items-center text-brand-primary font-medium hover:text-brand-deep transition-colors text-sm">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 4.255 4.045-.809c1.306.391 2.934.332 4.091-.32 1.454-1.002 1.559-2.28 1.559-2.28s1.618-.475 2.106-.723c.316-.16.536-.341.602-.551.053-.169.034-.959-.39-1.282-.249-.19-.714-.403-.984-.537-.253-.122-.505-.175-.765.234-.239.375-.515.753-.787.893-.243.125-.975-.125-2.062-1.218-.949-.953-1.161-1.636-1.047-1.896.16-.364.673-1.144.757-1.341.077-.183.024-.467-.146-.739-.148-.236-1.161-1.954-1.161-1.954s-.308-.432-.619-.387a1.4 1.4 0 0 0-.573.182z"/></svg>
+                    Hubungi Bantuan via WhatsApp
                 </a>
             </div>
-        @endif
 
+        </div>
     </div>
+</div>
 
-    <!-- Auto-refresh for processing status -->
-    @if(in_array($transaction['status'], ['pending', 'processing']))
-        <script>
-            // DeepState: Polling setiap 30 detik untuk status update
-            setTimeout(function() {
-                window.location.reload();
-            }, 30000);
-        </script>
-    @endif
-
-    <!-- Midtrans Payment Script -->
-    <script>
-        document.getElementById('pay-button')?.addEventListener('click', function() {
-            // Get snap token from server
-            fetch('/api/payment/{{ $transaction['transaction_code'] }}/snap-token', {
+@if($transaction->payment_status != 'paid')
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+<script>
+    const payButton = document.getElementById('pay-button');
+    const loadingText = document.getElementById('payment-loading');
+    
+    payButton.addEventListener('click', async function () {
+        // UI State
+        payButton.disabled = true;
+        payButton.classList.add('opacity-50', 'cursor-not-allowed');
+        loadingText.classList.remove('hidden');
+        
+        try {
+            // 1. Get Snap Token from Backend
+            const response = await fetch("{{ route('public.payment.token', $transaction->id) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.snap_token) {
-                    snap.pay(data.snap_token, {
-                        onSuccess: function(result) {
-                            window.location.reload();
-                        },
-                        onPending: function(result) {
-                            alert('Pembayaran pending. Silakan selesaikan pembayaran.');
-                        },
-                        onError: function(result) {
-                            alert('Pembayaran gagal. Silakan coba lagi.');
-                        }
-                    });
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan. Silakan coba lagi.');
             });
-        });
-    </script>
-</body>
-</html>
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.message || 'Gagal memulai pembayaran');
+
+            // 2. Open Snap Popup
+            window.snap.pay(data.snap_token, {
+                onSuccess: function(result) {
+                    window.location.reload();
+                },
+                onPending: function(result) {
+                    window.location.reload(); // Refresh to show pending state
+                },
+                onError: function(result) {
+                    alert('Pembayaran gagal, silakan coba lagi.');
+                    payButton.disabled = false;
+                    payButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    loadingText.classList.add('hidden');
+                },
+                onClose: function() {
+                    payButton.disabled = false;
+                    payButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    loadingText.classList.add('hidden');
+                }
+            });
+
+        } catch (error) {
+            alert(error.message);
+            payButton.disabled = false;
+            payButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            loadingText.classList.add('hidden');
+        }
+    });
+</script>
+@endif
+@endsection

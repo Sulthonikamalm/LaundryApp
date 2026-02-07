@@ -31,31 +31,43 @@ class ShipmentController extends Controller
     /**
      * Driver dashboard - list pending deliveries.
      * 
+     * DeepPerformance: Cached query + limit untuk responsiveness.
+     * 
      * @return View
      */
     public function dashboard(): View
     {
         $driver = auth()->guard('driver')->user();
+        $cacheKey = "driver_dashboard_{$driver->id}";
 
-        // Transaksi yang siap dikirim (status = ready) atau sedang dalam pengiriman
-        $pendingDeliveries = Transaction::with(['customer', 'shipments'])
-            ->where('status', 'ready')
-            ->whereDoesntHave('shipments', function ($query) {
-                $query->where('status', 'delivered');
-            })
-            ->orderBy('estimated_completion_date', 'asc')
-            ->get();
+        // DeepPerformance: Cache dashboard data for 30 seconds
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function () use ($driver) {
+            // Transaksi yang siap dikirim (status = ready) tanpa shipment delivered
+            $pendingDeliveries = Transaction::with(['customer:id,name,address,phone_number'])
+                ->select(['id', 'transaction_code', 'customer_id', 'estimated_completion_date'])
+                ->where('status', 'ready')
+                ->whereDoesntHave('shipments', function ($query) {
+                    $query->where('status', 'delivered');
+                })
+                ->orderBy('estimated_completion_date', 'asc')
+                ->limit(20) // DeepPerformance: Limit to 20 items
+                ->get();
 
-        // Pengiriman hari ini yang ditangani driver ini
-        $myDeliveries = Shipment::with(['transaction.customer'])
-            ->where('assigned_driver_id', $driver->id)
-            ->whereDate('created_at', today())
-            ->orderBy('created_at', 'desc')
-            ->get();
+            // Pengiriman hari ini yang ditangani driver ini
+            $myDeliveries = Shipment::with(['transaction:id,transaction_code,customer_id', 'transaction.customer:id,name,address'])
+                ->select(['id', 'transaction_id', 'status', 'address', 'created_at'])
+                ->where('assigned_driver_id', $driver->id)
+                ->whereDate('created_at', today())
+                ->orderBy('created_at', 'desc')
+                ->limit(15)
+                ->get();
+
+            return compact('pendingDeliveries', 'myDeliveries');
+        });
 
         return view('driver.dashboard', [
-            'pendingDeliveries' => $pendingDeliveries,
-            'myDeliveries' => $myDeliveries,
+            'pendingDeliveries' => $data['pendingDeliveries'],
+            'myDeliveries' => $data['myDeliveries'],
             'driver' => $driver,
         ]);
     }
