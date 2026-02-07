@@ -139,8 +139,8 @@ class TrackingController extends Controller
             ])->toArray(),
             'shipment' => $transaction->shipments->last() ? [
                 'status' => $transaction->shipments->last()->status,
-                'delivered_at' => $transaction->shipments->last()->delivered_at?->format('d/m/Y H:i'),
-                'proof_url' => $transaction->shipments->last()->proof_image_url,
+                'completed_at' => $transaction->shipments->last()->completed_at?->format('d/m/Y H:i'), // Fixed: was delivered_at
+                'proof_url' => $transaction->shipments->last()->photo_proof_url, // Fixed: was proof_image_url
             ] : null,
         ];
     }

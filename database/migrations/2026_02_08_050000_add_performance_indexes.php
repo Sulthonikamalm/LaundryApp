@@ -24,9 +24,9 @@ return new class extends Migration
 
         // 2. Shipments - composite index for driver dashboard
         Schema::table('shipments', function (Blueprint $table) {
-            // Index for driver dashboard: assigned_driver_id + created_at + status
+            // Index for driver dashboard: courier_id + created_at + status
             if (!$this->indexExists('shipments', 'shipments_driver_dashboard_index')) {
-                $table->index(['assigned_driver_id', 'created_at', 'status'], 'shipments_driver_dashboard_index');
+                $table->index(['courier_id', 'created_at', 'status'], 'shipments_driver_dashboard_index');
             }
         });
 

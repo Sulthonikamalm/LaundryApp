@@ -33,11 +33,11 @@
         <div class="bg-white rounded-3xl shadow-soft p-6 flex justify-between items-center border border-brand-surface/50">
             <div class="text-center w-1/2 border-r border-brand-surface">
                 <p class="text-xs text-brand-dark font-bold uppercase tracking-wider opacity-60">Tugas Aktif</p>
-                <p class="text-4xl font-display font-bold text-brand-black mt-2">{{ $myDeliveries->where('status', '!=', 'delivered')->count() }}</p>
+                <p class="text-4xl font-display font-bold text-brand-black mt-2">{{ $myDeliveries->where('status', '!=', 'completed')->count() }}</p>
             </div>
             <div class="text-center w-1/2">
                 <p class="text-xs text-brand-dark font-bold uppercase tracking-wider opacity-60">Selesai</p>
-                <p class="text-4xl font-display font-bold text-brand-primary mt-2">{{ $myDeliveries->where('status', 'delivered')->count() }}</p>
+                <p class="text-4xl font-display font-bold text-brand-primary mt-2">{{ $myDeliveries->where('status', 'completed')->count() }}</p>
             </div>
         </div>
     </div>
@@ -46,14 +46,14 @@
     <div class="px-6 mt-10 space-y-10">
 
         <!-- Section 1: Tugas Saya (Active) -->
-        @if($myDeliveries->where('status', '!=', 'delivered')->count() > 0)
+        @if($myDeliveries->where('status', '!=', 'completed')->count() > 0)
         <div>
             <h2 class="font-display text-lg font-bold text-brand-black mb-4 flex items-center">
                 <span class="w-2 h-8 bg-brand-primary rounded-full mr-3"></span>
                 Sedang Diantar
             </h2>
             <div class="space-y-4">
-                @foreach($myDeliveries->where('status', '!=', 'delivered') as $shipment)
+                @foreach($myDeliveries->where('status', '!=', 'completed') as $shipment)
                 <div class="bg-white rounded-3xl p-6 shadow-soft border border-brand-surface hover:border-brand-primary transition-all relative overflow-hidden group">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-brand-subtle rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     

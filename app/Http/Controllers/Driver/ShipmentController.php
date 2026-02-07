@@ -84,7 +84,7 @@ class ShipmentController extends Controller
 
         // Check if shipment already exists
         $existingShipment = Shipment::where('transaction_id', $transaction->id)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'failed') // Fixed: 'cancelled' is not valid enum
             ->first();
 
         if ($existingShipment) {
