@@ -101,17 +101,278 @@
 </div>
 
 <script>
-    function previewImage(input) {
+/**
+ * DeepJS: Delivery Detail Interactive Features
+ * - Image Preview + Compression
+ * - GPS Location Capture
+ * - Form Validation
+ * - Loading States
+ * - Camera Enhancement
+ */
+(function() {
+    'use strict';
+
+    const form = document.querySelector('form');
+    const proofInput = document.getElementById('proof_photo');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const notesTextarea = document.querySelector('textarea[name="notes"]');
+
+    // ============================================
+    // 1. IMAGE PREVIEW + COMPRESSION
+    // ============================================
+    window.previewImage = async function(input) {
         const file = input.files[0];
-        if (file) {
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('error', 'File harus berupa gambar');
+            input.value = '';
+            return;
+        }
+
+        // Validate file size (max 10MB before compression)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('error', 'Ukuran file terlalu besar (max 10MB)');
+            input.value = '';
+            return;
+        }
+
+        try {
+            // Compress image for faster upload
+            const compressed = await compressImage(file);
+            
+            // Preview
+            document.getElementById('image-preview').src = compressed.dataUrl;
+            document.getElementById('upload-placeholder').classList.add('hidden');
+            document.getElementById('preview-container').classList.remove('hidden');
+
+            // Show compression info
+            const savings = ((1 - compressed.size / file.size) * 100).toFixed(0);
+            if (savings > 10) {
+                showToast('success', `Gambar dioptimasi (${savings}% lebih kecil)`);
+            }
+
+            // Vibrate feedback
+            if ('vibrate' in navigator) navigator.vibrate(30);
+
+        } catch (err) {
+            console.error('Compression error:', err);
+            // Fallback to original preview
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 document.getElementById('image-preview').src = e.target.result;
                 document.getElementById('upload-placeholder').classList.add('hidden');
                 document.getElementById('preview-container').classList.remove('hidden');
-            }
+            };
             reader.readAsDataURL(file);
         }
+    };
+
+    async function compressImage(file, maxWidth = 1200, quality = 0.8) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Resize if too large
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    const size = Math.round((dataUrl.length * 3) / 4);
+
+                    resolve({ dataUrl, size });
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     }
+
+    // ============================================
+    // 2. GPS LOCATION CAPTURE
+    // ============================================
+    let currentLocation = null;
+
+    function captureLocation() {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    console.log('📍 Location captured:', currentLocation);
+                    
+                    // Add hidden input for location
+                    let locInput = document.getElementById('delivery_location');
+                    if (!locInput) {
+                        locInput = document.createElement('input');
+                        locInput.type = 'hidden';
+                        locInput.name = 'delivery_location';
+                        locInput.id = 'delivery_location';
+                        form.appendChild(locInput);
+                    }
+                    locInput.value = JSON.stringify(currentLocation);
+                },
+                (error) => {
+                    console.warn('Location error:', error);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    }
+
+    // Capture location on page load
+    captureLocation();
+
+    // ============================================
+    // 3. FORM VALIDATION + SUBMISSION
+    // ============================================
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            // Validate photo
+            if (!proofInput.files || proofInput.files.length === 0) {
+                e.preventDefault();
+                showToast('error', 'Foto bukti pengiriman wajib diisi');
+                proofInput.parentElement.classList.add('animate-shake');
+                setTimeout(() => proofInput.parentElement.classList.remove('animate-shake'), 500);
+                return;
+            }
+
+            // Prevent double submit
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <span class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Mengunggah...
+                </span>
+            `;
+
+            // Vibrate feedback
+            if ('vibrate' in navigator) navigator.vibrate([50, 30, 50]);
+        });
+    }
+
+    // ============================================
+    // 4. NOTES TEXTAREA ENHANCEMENT
+    // ============================================
+    if (notesTextarea) {
+        // Auto-resize
+        notesTextarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        // Character counter
+        const maxLength = 500;
+        const counter = document.createElement('div');
+        counter.className = 'text-xs text-brand-dark/50 text-right mt-1';
+        counter.textContent = `0/${maxLength}`;
+        notesTextarea.parentElement.appendChild(counter);
+
+        notesTextarea.addEventListener('input', () => {
+            counter.textContent = `${notesTextarea.value.length}/${maxLength}`;
+            if (notesTextarea.value.length > maxLength * 0.9) {
+                counter.classList.add('text-amber-500');
+            } else {
+                counter.classList.remove('text-amber-500');
+            }
+        });
+    }
+
+    // ============================================
+    // 5. TOAST NOTIFICATIONS
+    // ============================================
+    function showToast(type, message) {
+        const existing = document.querySelector('.toast-notification');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification fixed top-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-xl z-50 flex items-center gap-2 animate-fade-in-up ${
+            type === 'error' ? 'bg-red-500 text-white' : 'bg-brand-primary text-white'
+        }`;
+        toast.innerHTML = `
+            ${type === 'error' ? '⚠️' : '✓'}
+            <span class="text-sm font-medium">${message}</span>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ============================================
+    // 6. COPY ADDRESS TO CLIPBOARD
+    // ============================================
+    document.querySelectorAll('[data-copy]').forEach(el => {
+        el.addEventListener('click', () => {
+            navigator.clipboard.writeText(el.dataset.copy).then(() => {
+                showToast('success', 'Alamat disalin');
+                if ('vibrate' in navigator) navigator.vibrate(20);
+            });
+        });
+    });
+
+    // ============================================
+    // 7. CAMERA SWITCH (Front/Back)
+    // ============================================
+    let facingMode = 'environment'; // Default: back camera
+    
+    const switchCamBtn = document.createElement('button');
+    switchCamBtn.type = 'button';
+    switchCamBtn.className = 'absolute top-4 right-4 p-2 bg-brand-black/50 text-white rounded-full z-20';
+    switchCamBtn.innerHTML = `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`;
+    
+    const previewContainer = document.getElementById('preview-container');
+    if (previewContainer) {
+        previewContainer.appendChild(switchCamBtn);
+    }
+
+    switchCamBtn.addEventListener('click', () => {
+        facingMode = facingMode === 'environment' ? 'user' : 'environment';
+        proofInput.setAttribute('capture', facingMode);
+        showToast('success', facingMode === 'environment' ? 'Kamera Belakang' : 'Kamera Depan');
+    });
+
+    console.log('📦 Delivery Detail JS Loaded');
+})();
 </script>
+
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-shake { animation: shake 0.5s ease-in-out; }
+.animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
+</style>
 @endsection

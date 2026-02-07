@@ -117,3 +117,280 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+/**
+ * DeepJS: Public Tracking Interactive Features
+ * - Phone Auto-Format
+ * - Transaction Code Uppercase
+ * - Form Validation
+ * - Loading States
+ * - Recent Searches (localStorage)
+ * - Keyboard Shortcuts
+ */
+(function() {
+    'use strict';
+
+    const form = document.querySelector('form');
+    const txCodeInput = document.querySelector('input[name="transaction_code"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    // ============================================
+    // 1. TRANSACTION CODE AUTO-UPPERCASE
+    // ============================================
+    if (txCodeInput) {
+        txCodeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        });
+
+        // Auto-add dashes for LDR format
+        txCodeInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Backspace') return;
+            const val = e.target.value.replace(/-/g, '');
+            if (val.length >= 3 && val.length < 7) {
+                e.target.value = val.slice(0, 3) + '-' + val.slice(3);
+            } else if (val.length >= 7) {
+                e.target.value = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
+            }
+        });
+
+        // Show recent searches dropdown
+        const recentSearches = getRecentSearches();
+        if (recentSearches.length > 0) {
+            createRecentSearchesDropdown(txCodeInput, recentSearches);
+        }
+    }
+
+    // ============================================
+    // 2. PHONE NUMBER AUTO-FORMAT
+    // ============================================
+    if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+            // Remove non-digits
+            let val = e.target.value.replace(/\D/g, '');
+            
+            // Convert 0 prefix to 62
+            if (val.startsWith('0')) {
+                val = '62' + val.slice(1);
+            }
+            
+            // Format: 62 812 3456 7890
+            if (val.length > 2) {
+                val = val.slice(0, 2) + ' ' + val.slice(2);
+            }
+            if (val.length > 6) {
+                val = val.slice(0, 6) + ' ' + val.slice(6);
+            }
+            if (val.length > 11) {
+                val = val.slice(0, 11) + ' ' + val.slice(11);
+            }
+            
+            e.target.value = val.slice(0, 16);
+        });
+
+        // Show validation indicator
+        phoneInput.addEventListener('blur', (e) => {
+            const cleaned = e.target.value.replace(/\D/g, '');
+            const isValid = cleaned.length >= 10 && cleaned.length <= 13;
+            
+            if (e.target.value && !isValid) {
+                showInputError(phoneInput, 'Nomor tidak valid');
+            } else {
+                clearInputError(phoneInput);
+            }
+        });
+    }
+
+    // ============================================
+    // 3. FORM VALIDATION + LOADING STATE
+    // ============================================
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            // Validate transaction code
+            const txCode = txCodeInput?.value.replace(/-/g, '');
+            if (!txCode || txCode.length < 8) {
+                e.preventDefault();
+                showInputError(txCodeInput, 'Kode nota tidak lengkap');
+                txCodeInput?.focus();
+                return;
+            }
+
+            // Validate phone
+            const phone = phoneInput?.value.replace(/\D/g, '');
+            if (!phone || phone.length < 10) {
+                e.preventDefault();
+                showInputError(phoneInput, 'Nomor HP tidak valid');
+                phoneInput?.focus();
+                return;
+            }
+
+            // Prevent double submit
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            // Save to recent searches
+            saveRecentSearch(txCodeInput.value, phoneInput.value);
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            submitBtn.innerHTML = `
+                <span style="display: flex; align-items: center; justify-content: center;">
+                    <svg style="animation: spin 1s linear infinite; width: 20px; height: 20px; margin-right: 8px;" fill="none" viewBox="0 0 24 24">
+                        <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Mencari...
+                </span>
+            `;
+        });
+    }
+
+    // ============================================
+    // 4. RECENT SEARCHES (localStorage)
+    // ============================================
+    function getRecentSearches() {
+        try {
+            return JSON.parse(localStorage.getItem('silaundry_recent_searches') || '[]');
+        } catch {
+            return [];
+        }
+    }
+
+    function saveRecentSearch(code, phone) {
+        const searches = getRecentSearches();
+        const newSearch = { code, phone, date: Date.now() };
+        
+        // Remove duplicate and add to front
+        const filtered = searches.filter(s => s.code !== code);
+        filtered.unshift(newSearch);
+        
+        // Keep only last 5
+        const limited = filtered.slice(0, 5);
+        
+        localStorage.setItem('silaundry_recent_searches', JSON.stringify(limited));
+    }
+
+    function createRecentSearchesDropdown(input, searches) {
+        const dropdown = document.createElement('div');
+        dropdown.className = 'recent-searches-dropdown';
+        dropdown.style.cssText = 'display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 0.5rem; overflow: hidden; z-index: 50;';
+        
+        dropdown.innerHTML = `
+            <div style="padding: 0.75rem 1rem; border-bottom: 1px solid #f1f1f1; font-size: 0.75rem; font-weight: 700; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.05em;">Pencarian Terakhir</div>
+            ${searches.map(s => `
+                <button type="button" class="recent-item" data-code="${s.code}" data-phone="${s.phone}" style="width: 100%; padding: 1rem; text-align: left; background: none; border: none; cursor: pointer; transition: background 0.2s; display: flex; align-items: center;">
+                    <span style="flex: 1; font-family: monospace; font-weight: 600; color: #2e2d2c;">${s.code}</span>
+                    <span style="font-size: 0.75rem; color: rgba(0,0,0,0.4);">→</span>
+                </button>
+            `).join('')}
+        `;
+        
+        input.parentElement.style.position = 'relative';
+        input.parentElement.appendChild(dropdown);
+
+        // Show on focus
+        input.addEventListener('focus', () => {
+            if (input.value === '') {
+                dropdown.style.display = 'block';
+            }
+        });
+
+        // Hide on blur (with delay for click)
+        input.addEventListener('blur', () => {
+            setTimeout(() => dropdown.style.display = 'none', 150);
+        });
+
+        // Fill on click
+        dropdown.querySelectorAll('.recent-item').forEach(item => {
+            item.addEventListener('click', () => {
+                txCodeInput.value = item.dataset.code;
+                phoneInput.value = item.dataset.phone;
+                dropdown.style.display = 'none';
+            });
+
+            item.addEventListener('mouseover', () => {
+                item.style.backgroundColor = 'var(--brand-subtle, #f1f1f1)';
+            });
+            item.addEventListener('mouseout', () => {
+                item.style.backgroundColor = 'transparent';
+            });
+        });
+    }
+
+    // ============================================
+    // 5. INPUT ERROR HELPERS
+    // ============================================
+    function showInputError(input, message) {
+        clearInputError(input);
+        
+        const error = document.createElement('p');
+        error.className = 'input-error-msg';
+        error.style.cssText = 'margin-top: 0.5rem; font-size: 0.75rem; color: #ef4444; padding-left: 1rem; font-weight: 500;';
+        error.textContent = message;
+        
+        input.parentElement.parentElement.appendChild(error);
+        input.style.borderColor = '#ef4444';
+        
+        // Shake animation
+        input.parentElement.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => input.parentElement.style.animation = '', 500);
+    }
+
+    function clearInputError(input) {
+        const existing = input.parentElement.parentElement.querySelector('.input-error-msg');
+        if (existing) existing.remove();
+        input.style.borderColor = 'transparent';
+    }
+
+    // ============================================
+    // 6. KEYBOARD SHORTCUTS
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Enter to submit
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            form?.requestSubmit();
+        }
+        
+        // Tab between fields
+        if (e.key === 'Tab' && !e.shiftKey && document.activeElement === txCodeInput) {
+            e.preventDefault();
+            phoneInput?.focus();
+        }
+    });
+
+    // ============================================
+    // 7. ENTRANCE ANIMATION
+    // ============================================
+    const card = document.querySelector('.max-w-\\[480px\\]');
+    if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease-out';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+    }
+
+    console.log('🔍 Tracking Page JS Loaded');
+})();
+</script>
+
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+</style>
+@endpush

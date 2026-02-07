@@ -124,3 +124,245 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+/**
+ * DeepJS: Driver Dashboard Interactive Features
+ * - Pull to Refresh
+ * - Auto Refresh (30s)
+ * - Touch Feedback
+ * - Swipe Actions
+ * - Animations
+ */
+(function() {
+    'use strict';
+
+    // ============================================
+    // 1. PULL TO REFRESH
+    // ============================================
+    let startY = 0;
+    let isPulling = false;
+    const threshold = 80;
+
+    const pullIndicator = document.createElement('div');
+    pullIndicator.id = 'pull-indicator';
+    pullIndicator.innerHTML = `
+        <div class="flex items-center justify-center py-4 text-brand-primary opacity-0 transition-all duration-300">
+            <svg class="w-6 h-6 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="text-sm font-medium">Tarik untuk refresh...</span>
+        </div>
+    `;
+    pullIndicator.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 100; transform: translateY(-100%);';
+    document.body.prepend(pullIndicator);
+
+    document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+            startY = e.touches[0].pageY;
+            isPulling = true;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isPulling) return;
+        const currentY = e.touches[0].pageY;
+        const diff = currentY - startY;
+        
+        if (diff > 0 && diff < 150) {
+            const progress = Math.min(diff / threshold, 1);
+            pullIndicator.style.transform = `translateY(${diff - 50}px)`;
+            pullIndicator.querySelector('div').style.opacity = progress;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+        if (!isPulling) return;
+        isPulling = false;
+        
+        const currentTransform = pullIndicator.style.transform;
+        const match = currentTransform.match(/translateY\(([^)]+)px\)/);
+        
+        if (match && parseFloat(match[1]) > threshold - 50) {
+            // Trigger refresh
+            pullIndicator.querySelector('span').textContent = 'Memperbarui...';
+            vibrate(50);
+            setTimeout(() => location.reload(), 500);
+        } else {
+            pullIndicator.style.transform = 'translateY(-100%)';
+        }
+    });
+
+    // ============================================
+    // 2. AUTO REFRESH (30 detik)
+    // ============================================
+    let autoRefreshTimer;
+    let lastActivity = Date.now();
+
+    function resetAutoRefresh() {
+        lastActivity = Date.now();
+        clearTimeout(autoRefreshTimer);
+        autoRefreshTimer = setTimeout(() => {
+            if (Date.now() - lastActivity >= 30000) {
+                showRefreshToast();
+            }
+        }, 30000);
+    }
+
+    function showRefreshToast() {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-brand-black text-white px-6 py-3 rounded-full shadow-xl z-50 flex items-center gap-3 animate-fade-in-up';
+        toast.innerHTML = `
+            <span class="text-sm">Data mungkin sudah berubah</span>
+            <button onclick="location.reload()" class="bg-brand-primary px-3 py-1 rounded-full text-xs font-bold">Refresh</button>
+            <button onclick="this.parentElement.remove()" class="text-brand-surface/50 hover:text-white">✕</button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 10000);
+    }
+
+    ['click', 'touchstart', 'scroll'].forEach(event => {
+        document.addEventListener(event, resetAutoRefresh, { passive: true });
+    });
+    resetAutoRefresh();
+
+    // ============================================
+    // 3. VIBRATION FEEDBACK
+    // ============================================
+    function vibrate(duration = 10) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(duration);
+        }
+    }
+
+    // Add haptic feedback to all buttons
+    document.querySelectorAll('button, a[href]').forEach(el => {
+        el.addEventListener('click', () => vibrate(10));
+    });
+
+    // ============================================
+    // 4. SWIPE TO CALL / SWIPE TO MAP
+    // ============================================
+    document.querySelectorAll('[data-swipe-action]').forEach(card => {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        card.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        card.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe(card);
+        }, { passive: true });
+
+        function handleSwipe(element) {
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 100) {
+                if (diff > 0) {
+                    // Swipe left - show action
+                    element.classList.add('translate-x-[-80px]');
+                    vibrate(20);
+                } else {
+                    // Swipe right - hide action
+                    element.classList.remove('translate-x-[-80px]');
+                }
+            }
+        }
+    });
+
+    // ============================================
+    // 5. STAGGERED ANIMATION ON LOAD
+    // ============================================
+    document.querySelectorAll('.space-y-4 > div').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.4s ease-out';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 + (index * 80));
+    });
+
+    // ============================================
+    // 6. LONG PRESS FOR QUICK ACTIONS
+    // ============================================
+    let pressTimer;
+    document.querySelectorAll('.space-y-4 > div').forEach(card => {
+        card.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                vibrate([50, 30, 50]);
+                showQuickActions(card, e);
+            }, 500);
+        }, { passive: true });
+
+        card.addEventListener('touchend', () => clearTimeout(pressTimer));
+        card.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    });
+
+    function showQuickActions(card, event) {
+        const existing = document.getElementById('quick-actions');
+        if (existing) existing.remove();
+
+        const phone = card.querySelector('[data-phone]')?.dataset.phone;
+        const address = card.querySelector('[data-address]')?.dataset.address;
+
+        const menu = document.createElement('div');
+        menu.id = 'quick-actions';
+        menu.className = 'fixed inset-0 bg-black/50 z-50 flex items-end animate-fade-in';
+        menu.innerHTML = `
+            <div class="bg-white w-full rounded-t-3xl p-6 space-y-3 animate-slide-up">
+                <p class="text-center text-xs text-brand-dark mb-4">Aksi Cepat</p>
+                ${phone ? `<a href="tel:${phone}" class="flex items-center justify-center w-full py-4 bg-brand-primary text-white font-bold rounded-xl">📞 Telepon Langsung</a>` : ''}
+                ${address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" class="flex items-center justify-center w-full py-4 bg-brand-deep text-white font-bold rounded-xl">🗺️ Buka di Maps</a>` : ''}
+                <button onclick="this.closest('#quick-actions').remove()" class="w-full py-4 bg-brand-surface text-brand-dark font-bold rounded-xl">Batal</button>
+            </div>
+        `;
+        document.body.appendChild(menu);
+        menu.addEventListener('click', (e) => {
+            if (e.target === menu) menu.remove();
+        });
+    }
+
+    // ============================================
+    // 7. ONLINE/OFFLINE DETECTION
+    // ============================================
+    function updateOnlineStatus() {
+        const indicator = document.querySelector('.animate-pulse');
+        if (indicator) {
+            if (navigator.onLine) {
+                indicator.classList.remove('bg-red-500');
+                indicator.classList.add('bg-brand-accent');
+                indicator.nextElementSibling?.textContent === 'Offline' && (indicator.nextElementSibling.textContent = 'Online');
+            } else {
+                indicator.classList.remove('bg-brand-accent');
+                indicator.classList.add('bg-red-500');
+                indicator.parentElement.querySelector('span:last-child') && (indicator.parentElement.querySelector('span:last-child').textContent = 'Offline');
+            }
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    console.log('🚀 Driver Dashboard JS Loaded');
+})();
+</script>
+
+<style>
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+</style>
+@endpush

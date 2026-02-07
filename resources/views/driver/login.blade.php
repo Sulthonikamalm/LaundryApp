@@ -66,3 +66,189 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+/**
+ * DeepJS: Driver Login Interactive Features
+ * - PIN Input Enhancement
+ * - Loading State
+ * - Shake Animation on Error
+ * - Keyboard Handling
+ */
+(function() {
+    'use strict';
+
+    const form = document.querySelector('form');
+    const pinInput = document.querySelector('input[name="pin"]');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const loginCard = document.querySelector('.backdrop-blur-md');
+
+    // ============================================
+    // 1. PIN INPUT ENHANCEMENT
+    // ============================================
+    if (pinInput) {
+        // Only allow numbers
+        pinInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+            updatePinDots(e.target.value.length);
+        });
+
+        // Visual PIN dots indicator
+        const dotsContainer = document.createElement('div');
+        dotsContainer.className = 'flex justify-center gap-3 mt-4';
+        dotsContainer.innerHTML = Array(6).fill(0).map((_, i) => 
+            `<div class="pin-dot w-3 h-3 rounded-full bg-brand-deep border border-brand-primary transition-all duration-200" data-index="${i}"></div>`
+        ).join('');
+        pinInput.parentElement.parentElement.appendChild(dotsContainer);
+
+        function updatePinDots(length) {
+            document.querySelectorAll('.pin-dot').forEach((dot, i) => {
+                if (i < length) {
+                    dot.classList.remove('bg-brand-deep');
+                    dot.classList.add('bg-brand-accent', 'scale-110');
+                } else {
+                    dot.classList.add('bg-brand-deep');
+                    dot.classList.remove('bg-brand-accent', 'scale-110');
+                }
+            });
+
+            // Auto-submit when 6 digits entered
+            if (length === 6) {
+                setTimeout(() => form.requestSubmit(), 300);
+            }
+        }
+
+        // Keyboard haptic feedback
+        pinInput.addEventListener('keydown', () => {
+            if ('vibrate' in navigator) navigator.vibrate(5);
+        });
+    }
+
+    // ============================================
+    // 2. LOADING STATE
+    // ============================================
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            // Prevent double submit
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <span class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Memverifikasi...
+                </span>
+            `;
+        });
+    }
+
+    // ============================================
+    // 3. SHAKE ANIMATION ON ERROR
+    // ============================================
+    const errorAlert = document.querySelector('.bg-red-500\\/10');
+    if (errorAlert && loginCard) {
+        loginCard.classList.add('animate-shake');
+        if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+        
+        // Clear PIN on error
+        if (pinInput) {
+            pinInput.value = '';
+            pinInput.focus();
+            document.querySelectorAll('.pin-dot').forEach(dot => {
+                dot.classList.add('bg-brand-deep');
+                dot.classList.remove('bg-brand-accent', 'scale-110');
+            });
+        }
+    }
+
+    // ============================================
+    // 4. ENTER KEY HANDLING
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && document.activeElement !== pinInput) {
+            pinInput?.focus();
+        }
+    });
+
+    // ============================================
+    // 5. BACKGROUND PARTICLE EFFECT
+    // ============================================
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particles';
+    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.3;';
+    document.body.prepend(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 1;
+            this.speedX = Math.random() * 0.5 - 0.25;
+            this.speedY = Math.random() * 0.5 - 0.25;
+            this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        }
+        draw() {
+            ctx.fillStyle = `rgba(76, 125, 115, ${this.opacity})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    console.log('🔐 Driver Login JS Loaded');
+})();
+</script>
+
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
+</style>
+@endpush

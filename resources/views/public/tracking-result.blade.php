@@ -244,4 +244,193 @@
     });
 </script>
 @endif
+
+@push('scripts')
+<script>
+/**
+ * DeepJS: Tracking Result Interactive Features
+ * - Copy Transaction Code
+ * - Share Functionality
+ * - Print Receipt
+ * - Status Animation
+ * - Auto Refresh
+ */
+(function() {
+    'use strict';
+
+    // ============================================
+    // 1. COPY TRANSACTION CODE
+    // ============================================
+    const txCode = '{{ $transaction->transaction_code }}';
+    
+    document.querySelectorAll('[data-copy-code]').forEach(el => {
+        el.style.cursor = 'pointer';
+        el.title = 'Klik untuk menyalin';
+        
+        el.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(txCode);
+                showToast('✓ Kode nota disalin');
+                if ('vibrate' in navigator) navigator.vibrate(20);
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = txCode;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✓ Kode nota disalin');
+            }
+        });
+    });
+
+    // ============================================
+    // 2. SHARE FUNCTIONALITY
+    // ============================================
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const shareData = {
+                title: 'Status Laundry - SiLaundry',
+                text: `Status cucian ${txCode}: {{ ucfirst($transaction->status) }}`,
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                // Fallback: copy link
+                await navigator.clipboard.writeText(window.location.href);
+                showToast('✓ Link disalin');
+            }
+        });
+    }
+
+    // ============================================
+    // 3. PRINT RECEIPT
+    // ============================================
+    const printBtn = document.getElementById('print-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    // ============================================
+    // 4. STATUS ANIMATION
+    // ============================================
+    const statusSteps = document.querySelectorAll('.relative.pl-8 > div');
+    statusSteps.forEach((step, index) => {
+        step.style.opacity = '0';
+        step.style.transform = 'translateX(-20px)';
+        step.style.transition = 'all 0.5s ease-out';
+        
+        setTimeout(() => {
+            step.style.opacity = '1';
+            step.style.transform = 'translateX(0)';
+        }, 200 + (index * 150));
+    });
+
+    // ============================================
+    // 5. AUTO REFRESH (Every 2 minutes for pending status)
+    // ============================================
+    const currentStatus = '{{ $transaction->status }}';
+    if (['pending', 'processing'].includes(currentStatus)) {
+        setTimeout(() => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-brand-black text-white px-6 py-3 rounded-full shadow-xl z-50 flex items-center gap-3';
+            toast.innerHTML = `
+                <span class="text-sm">Cek status terbaru?</span>
+                <button onclick="location.reload()" class="bg-brand-primary px-3 py-1 rounded-full text-xs font-bold">Refresh</button>
+                <button onclick="this.parentElement.remove()" class="text-white/50">✕</button>
+            `;
+            document.body.appendChild(toast);
+        }, 120000); // 2 minutes
+    }
+
+    // ============================================
+    // 6. DELIVERY PROOF IMAGE LIGHTBOX
+    // ============================================
+    document.querySelectorAll('[data-lightbox]').forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => {
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+            overlay.innerHTML = `
+                <img src="${img.src}" class="max-w-full max-h-full rounded-lg" alt="Bukti pengiriman">
+                <button class="absolute top-4 right-4 text-white text-4xl" onclick="this.parentElement.remove()">×</button>
+            `;
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.remove();
+            });
+            document.body.appendChild(overlay);
+        });
+    });
+
+    // ============================================
+    // 7. PAYMENT HISTORY ACCORDION
+    // ============================================
+    document.querySelectorAll('[data-accordion-toggle]').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const target = document.getElementById(toggle.dataset.accordionToggle);
+            if (target) {
+                const isOpen = target.style.maxHeight && target.style.maxHeight !== '0px';
+                target.style.maxHeight = isOpen ? '0px' : target.scrollHeight + 'px';
+                target.style.overflow = 'hidden';
+                toggle.querySelector('svg')?.classList.toggle('rotate-180');
+            }
+        });
+    });
+
+    // ============================================
+    // 8. TOAST NOTIFICATION
+    // ============================================
+    function showToast(message) {
+        const existing = document.querySelector('.toast-notification');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification fixed top-20 left-1/2 -translate-x-1/2 px-6 py-3 bg-brand-primary text-white rounded-full shadow-xl z-50 text-sm font-medium';
+        toast.style.animation = 'fadeInUp 0.3s ease-out';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    // ============================================
+    // 9. ENTRANCE ANIMATION
+    // ============================================
+    const cards = document.querySelectorAll('.rounded-3xl');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.5s ease-out';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 + (index * 100));
+    });
+
+    console.log('📋 Tracking Result JS Loaded');
+})();
+</script>
+
+<style>
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px) translateX(-50%); }
+    to { opacity: 1; transform: translateY(0) translateX(-50%); }
+}
+@media print {
+    header, footer, .no-print, button { display: none !important; }
+    body { background: white !important; }
+    .rounded-3xl { box-shadow: none !important; border: 1px solid #ddd !important; }
+}
+</style>
+@endpush
 @endsection
