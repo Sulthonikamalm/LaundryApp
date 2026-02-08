@@ -312,7 +312,7 @@
     }
 
     // ============================================
-    // 3. PRINT RECEIPT
+    // 3. CETAK NOTA
     // ============================================
     const printBtn = document.getElementById('print-btn');
     if (printBtn) {
@@ -322,7 +322,7 @@
     }
 
     // ============================================
-    // 4. STATUS ANIMATION
+    // 4. ANIMASI STATUS
     // ============================================
     const statusSteps = document.querySelectorAll('.relative.pl-8 > div');
     statusSteps.forEach((step, index) => {
@@ -337,7 +337,7 @@
     });
 
     // ============================================
-    // 5. AUTO REFRESH (Every 2 minutes for pending status)
+    // 5. AUTO REFRESH (Setiap 2 menit untuk status pending)
     // ============================================
     const currentStatus = '{{ $transaction->status }}';
     if (['pending', 'processing'].includes(currentStatus)) {
@@ -354,7 +354,7 @@
     }
 
     // ============================================
-    // 6. DELIVERY PROOF IMAGE LIGHTBOX
+    // 6. LIGHTBOX BUKTI PENGIRIMAN
     // ============================================
     document.querySelectorAll('[data-lightbox]').forEach(img => {
         img.style.cursor = 'zoom-in';
@@ -388,7 +388,7 @@
     });
 
     // ============================================
-    // 8. TOAST NOTIFICATION
+    // 8. NOTIFIKASI TOAST
     // ============================================
     function showToast(message) {
         const existing = document.querySelector('.toast-notification');
@@ -403,7 +403,7 @@
     }
 
     // ============================================
-    // 9. ENTRANCE ANIMATION
+    // 9. ANIMASI MASUK
     // ============================================
     const cards = document.querySelectorAll('.rounded-3xl');
     cards.forEach((card, index) => {
@@ -417,7 +417,7 @@
         }, 100 + (index * 100));
     });
 
-    console.log('📋 Tracking Result JS Loaded');
+    console.log('📋 Halaman Hasil Tracking Siap');
 })();
 </script>
 

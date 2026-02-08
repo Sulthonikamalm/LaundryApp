@@ -356,15 +356,15 @@
     }
 
     // ============================================
-    // 6. KEYBOARD SHORTCUTS
+    // 6. SHORTCUT KEYBOARD
     // ============================================
     document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + Enter to submit
+        // Ctrl/Cmd + Enter untuk submit
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             form?.requestSubmit();
         }
         
-        // Tab between fields
+        // Tab antar field
         if (e.key === 'Tab' && !e.shiftKey && document.activeElement === txCodeInput) {
             e.preventDefault();
             phoneInput?.focus();
@@ -372,7 +372,7 @@
     });
 
     // ============================================
-    // 7. ENTRANCE ANIMATION
+    // 7. ANIMASI MASUK
     // ============================================
     const card = document.querySelector('.max-w-\\[480px\\]');
     if (card) {
@@ -385,8 +385,8 @@
             card.style.transform = 'translateY(0)';
         }, 100);
     }
-
-    console.log('🔍 Tracking Page JS Loaded');
+    
+    console.log('🔍 Halaman Tracking Siap');
 })();
 </script>
 
