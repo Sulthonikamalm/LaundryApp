@@ -10,6 +10,7 @@ use App\Models\TransactionDetail;
 use App\Models\Payment;
 use App\Models\Admin; // Add import
 use Illuminate\Support\Facades\Log;
+use App\Jobs\SendWhatsappJob;
 
 /**
  * TransactionObserver - Centralized Business Logic
@@ -43,6 +44,8 @@ class TransactionObserver
         return Admin::first()->id ?? null;
     }
 
+
+
     /**
      * Handle the Transaction "created" event.
      */
@@ -57,6 +60,9 @@ class TransactionObserver
         ]);
         
         Log::info("Transaction {$transaction->transaction_code} created.");
+
+        // DeepAutomation: Kirim WA saat order baru
+        SendWhatsappJob::dispatch($transaction, 'new_order');
     }
 
     /**
@@ -68,17 +74,26 @@ class TransactionObserver
 
         // 1. Log Status Change (Business Status)
         if ($transaction->isDirty('status')) {
+            $newStatus = $transaction->status;
+
             TransactionStatusLog::create([
                 'transaction_id' => $transaction->id,
                 'changed_by' => $actorId,
                 'previous_status' => $transaction->getOriginal('status'),
-                'new_status' => $transaction->status,
+                'new_status' => $newStatus,
                 'notes' => 'Perubahan status transaksi',
             ]);
+
+            // DeepAutomation: Kirim WA saat status Ready
+            if ($newStatus === 'ready') {
+                SendWhatsappJob::dispatch($transaction, 'ready');
+            }
         }
 
         // 2. Log Payment Status Change
         if ($transaction->isDirty('payment_status')) {
+            $newPaymentStatus = $transaction->payment_status;
+            
             TransactionStatusLog::create([
                 'transaction_id' => $transaction->id,
                 'changed_by' => $actorId,
@@ -86,6 +101,11 @@ class TransactionObserver
                 'new_status' => $transaction->payment_status,
                 'notes' => 'Perubahan status pembayaran',
             ]);
+
+            // DeepAutomation: Kirim WA saat status Lunas (Paid)
+            if ($newPaymentStatus === 'paid') {
+                SendWhatsappJob::dispatch($transaction, 'payment_received');
+            }
         }
     }
 

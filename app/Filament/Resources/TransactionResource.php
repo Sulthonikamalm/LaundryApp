@@ -154,6 +154,7 @@ class TransactionResource extends Resource
                                                 Select::make('service_id')
                                                     ->label('Layanan')
                                                     ->options(Service::where('is_active', true)->pluck('service_name', 'id'))
+                                                    ->placeholder('Pilih Layanan...')
                                                     ->required()
                                                     ->searchable()
                                                     ->reactive() // DeepState: React to changes
@@ -211,12 +212,11 @@ class TransactionResource extends Resource
                                             ]),
                                     ])
                                     ->columns(1)
-                                    // DeepState: Recalculate Grand Total when items change
-                                    // Note: In Filament v2/v3 logic might require server-side hook or dedicated placeholder
-                                    ->collapsible()
+                                    ->collapsible() // Re-enabling collapsible as it often handles button state better
                                     ->cloneable()
+                                    ->createItemButtonLabel('Tambah Layanan') // Standard label without special chars
                                     ->defaultItems(1)
-                                    ->minItems(1),
+                                    ->minItems(1), // Removed disableLabel to avoid side effects
                             ]),
                     ])
                     ->columnSpan(['lg' => 2]),
@@ -228,25 +228,14 @@ class TransactionResource extends Resource
                             ->schema([
                                 Select::make('status')
                                     ->label('Status Order')
-                                    ->options([
-                                        'pending' => 'Pending',
-                                        'processing' => 'Proses',
-                                        'ready' => 'Siap Diambil',
-                                        'completed' => 'Selesai',
-                                        'cancelled' => 'Dibatalkan',
-                                    ])
+                                    ->options(Transaction::getStatusOptions())
                                     ->default('pending')
                                     ->required()
                                     ->disableOptionWhen(fn (string $value): bool => $value === 'completed' && ! auth()->user()->isOwner()),
                                 
                                 Select::make('payment_status')
                                     ->label('Status Pembayaran')
-                                    ->options([
-                                        'unpaid' => 'Belum Bayar',
-                                        'partial' => 'DP/Sebagian',
-                                        'paid' => 'Lunas',
-                                    ])
-                                    ->disabled() // Managed by system
+                                    ->options(Transaction::getPaymentStatusOptions())
                                     ->default('unpaid'),
 
                                 // Placeholder for Total Cost visualization
@@ -271,6 +260,29 @@ class TransactionResource extends Resource
                                     ->label('Catatan Internal')
                                     ->rows(3),
                             ]),
+                        
+                        // DeepUX: CSS Injection to lift buttons & fix repeater
+                        Placeholder::make('css_tweaks')
+                            ->label('')
+                            ->content(new \Illuminate\Support\HtmlString('
+                                <style>
+                                    .filament-form-actions {
+                                        margin-top: 2rem !important;
+                                        padding-bottom: 5rem !important;
+                                    }
+                                    
+                                    /* DeepFix: Force Repeater Add Button Visibility */
+                                    .filament-forms-repeater-component button.filament-button {
+                                        background-color: #10B981 !important;
+                                        color: white !important;
+                                        border: 1px solid #10B981 !important;
+                                        opacity: 1 !important;
+                                    }
+                                    .filament-forms-repeater-component button.filament-button:hover {
+                                        background-color: #059669 !important;
+                                    }
+                                </style>
+                            ')),
                     ])
                     ->columnSpan(['lg' => 1]),
             ])
@@ -304,22 +316,14 @@ class TransactionResource extends Resource
                     ->sortable(),
 
                 BadgeColumn::make('status')
-                    ->label('Status') // Translation map di model/resource
-                    ->colors([
-                        'secondary' => 'pending',
-                        'warning' => 'processing',
-                        'success' => 'ready',
-                        'primary' => 'completed',
-                        'danger' => 'cancelled',
-                    ]),
+                    ->label('Status')
+                    ->colors(Transaction::getStatusColors())
+                    ->formatStateUsing(fn (string $state): string => Transaction::getStatusOptions()[$state] ?? ucfirst($state)),
 
                 BadgeColumn::make('payment_status')
                     ->label('Pembayaran')
-                    ->colors([
-                        'danger' => 'unpaid',
-                        'warning' => 'partial',
-                        'success' => 'paid',
-                    ]),
+                    ->colors(Transaction::getPaymentStatusColors())
+                    ->formatStateUsing(fn (string $state): string => Transaction::getPaymentStatusOptions()[$state] ?? ucfirst($state)),
 
                 TextColumn::make('total_cost')
                     ->label('Total')
@@ -329,13 +333,7 @@ class TransactionResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'processing' => 'Proses',
-                        'ready' => 'Siap',
-                        'completed' => 'Selesai',
-                        'cancelled' => 'Batal',
-                    ]),
+                    ->options(Transaction::getStatusOptions()),
                 TrashedFilter::make(),
             ])
             ->actions([
@@ -343,6 +341,25 @@ class TransactionResource extends Resource
                 Tables\Actions\EditAction::make()->label('Ubah'),
                 Tables\Actions\DeleteAction::make()->label('Hapus')
                     ->hidden(fn () => !auth()->user()->isOwner()),
+                    
+                // DeepAutomation: Tombol Resend WA Manual
+                Tables\Actions\Action::make('resend_wa')
+                    ->label('Kirim Ulang WA')
+                    ->icon('heroicon-o-chat-alt')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Kirim Ulang Nota WhatsApp')
+                    ->modalSubheading('Apakah Anda yakin ingin mengirim ulang nota transaksi ini ke pelanggan?')
+                    ->modalButton('Ya, Kirim Sekarang')
+                    ->action(function (Transaction $record) {
+                        \App\Jobs\SendWhatsappJob::dispatch($record, 'manual_resend');
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Sedang dikirim')
+                            ->body('Pesan WhatsApp sedang diproses di latar belakang.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }

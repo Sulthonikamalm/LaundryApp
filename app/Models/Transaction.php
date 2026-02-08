@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -293,6 +294,50 @@ class Transaction extends Model
     }
 
     // ========================================
+    // ENUMS & OPTIONS (DeepClean: Centralized Source of Truth)
+    // ========================================
+
+    public static function getStatusOptions(): array
+    {
+        return [
+            'pending' => 'Pending',
+            'processing' => 'Proses',
+            'ready' => 'Siap Diambil',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+        ];
+    }
+
+    public static function getPaymentStatusOptions(): array
+    {
+        return [
+            'unpaid' => 'Belum Bayar',
+            'partial' => 'DP/Sebagian',
+            'paid' => 'Lunas',
+        ];
+    }
+
+    public static function getStatusColors(): array
+    {
+        return [
+            'secondary' => 'pending',
+            'warning' => 'processing',
+            'success' => 'ready',
+            'primary' => 'completed',
+            'danger' => 'cancelled',
+        ];
+    }
+
+    public static function getPaymentStatusColors(): array
+    {
+        return [
+            'danger' => 'unpaid',
+            'warning' => 'partial',
+            'success' => 'paid',
+        ];
+    }
+
+    // ========================================
     // BOOT (DeepSecurity: Auto-generate transaction code)
     // ========================================
 
@@ -301,6 +346,9 @@ class Transaction extends Model
         static::creating(function ($transaction) {
             if (empty($transaction->transaction_code)) {
                 $transaction->transaction_code = self::generateTransactionCode();
+            }
+            if (empty($transaction->url_token)) {
+                $transaction->url_token = Str::random(32);
             }
         });
     }

@@ -93,6 +93,26 @@ class TrackingController extends Controller
     }
 
     /**
+     * Show tracking result by secure token.
+     * 
+     * DeepUX: Direct access without manual input.
+     * DeepSecurity: Token 32-char entropy is practically unguessable.
+     * 
+     * @param string $token
+     * @return View
+     */
+    public function showByToken(string $token): View
+    {
+        $transaction = Transaction::with(['customer', 'details.service', 'payments', 'shipments'])
+            ->where('url_token', $token)
+            ->firstOrFail();
+
+        return view('public.tracking-result', [
+            'transaction' => $transaction,
+        ]);
+    }
+
+    /**
      * Normalize phone number format.
      * 
      * @param string $phone

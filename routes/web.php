@@ -19,6 +19,9 @@ use App\Http\Controllers\Driver\ShipmentController;
 Route::get('/', [TrackingController::class, 'index'])->name('public.tracking');
 Route::post('/tracking', [TrackingController::class, 'search'])->name('public.tracking.search');
 
+// DeepUX: Direct Access via Token (Clean URL)
+Route::get('/t/{token}', [TrackingController::class, 'showByToken'])->name('public.tracking.show');
+
 // Fix: Redirection for 'login' route which is missing but expected by Laravel auth
 Route::get('/login', function () {
     return redirect()->route('filament.auth.login');

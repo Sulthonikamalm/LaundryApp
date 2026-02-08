@@ -12,6 +12,16 @@ class CreateTransaction extends CreateRecord
     protected static string $resource = TransactionResource::class;
 
     /**
+     * Disable "Create & Create Another" button.
+     * 
+     * DeepUX: Fokus kasir pada satu transaksi sampai selesai.
+     * Mencegah double entry yang tidak disengaja.
+     * 
+     * @return bool
+     */
+    protected static bool $canCreateAnother = false;
+
+    /**
      * Mutate form data before create.
      * 
      * DeepSecurity: Auto-set created_by dengan user yang sedang login.
@@ -35,5 +45,22 @@ class CreateTransaction extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    /**
+     * Custom Form Actions (Translating to Indonesian).
+     * 
+     * @return array
+     */
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getCreateFormAction()
+                ->label('Simpan Transaksi')
+                ->icon('heroicon-o-check'),
+            $this->getCancelFormAction()
+                ->label('Batal')
+                ->icon('heroicon-o-x'),
+        ];
     }
 }
