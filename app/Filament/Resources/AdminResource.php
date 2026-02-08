@@ -123,10 +123,16 @@ class AdminResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Ubah'),
-                Tables\Actions\DeleteAction::make()->label('Hapus'),
+                Tables\Actions\DeleteAction::make()->label('Hapus')
+                    ->modalHeading('Hapus Staff')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus staff ini?')
+                    ->modalButton('Ya, Hapus'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih'),
+                Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih')
+                    ->modalHeading('Hapus Staff Terpilih')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus staff yang dipilih?')
+                    ->modalButton('Ya, Hapus'),
             ]);
     }
 

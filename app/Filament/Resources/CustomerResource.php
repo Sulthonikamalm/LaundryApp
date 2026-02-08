@@ -179,10 +179,16 @@ class CustomerResource extends Resource
                 Tables\Actions\ViewAction::make()->label('Lihat'),
                 Tables\Actions\EditAction::make()->label('Ubah'),
                 Tables\Actions\DeleteAction::make()->label('Hapus')
+                    ->modalHeading('Hapus Pelanggan')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus pelanggan ini?')
+                    ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih')
+                    ->modalHeading('Hapus Pelanggan Terpilih')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus data yang dipilih?')
+                    ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
                 Tables\Actions\RestoreBulkAction::make()->label('Pulihkan')
                     ->visible(fn () => auth()->user()?->isOwner()),

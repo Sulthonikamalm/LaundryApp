@@ -340,6 +340,9 @@ class TransactionResource extends Resource
                 Tables\Actions\ViewAction::make()->label('Lihat'),
                 Tables\Actions\EditAction::make()->label('Ubah'),
                 Tables\Actions\DeleteAction::make()->label('Hapus')
+                    ->modalHeading('Hapus Transaksi')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.')
+                    ->modalButton('Ya, Hapus')
                     ->hidden(fn () => !auth()->user()->isOwner()),
                     
                 // DeepAutomation: Tombol Resend WA Manual

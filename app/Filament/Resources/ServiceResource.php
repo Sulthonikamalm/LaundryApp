@@ -183,10 +183,16 @@ class ServiceResource extends Resource
                 Tables\Actions\EditAction::make()->label('Ubah')
                     ->visible(fn () => auth()->user()?->isOwner()),
                 Tables\Actions\DeleteAction::make()->label('Hapus')
+                    ->modalHeading('Hapus Layanan')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus layanan ini?')
+                    ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih')
+                    ->modalHeading('Hapus Layanan Terpilih')
+                    ->modalSubheading('Apakah Anda yakin ingin menghapus layanan yang dipilih?')
+                    ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
                 Tables\Actions\RestoreBulkAction::make()->label('Pulihkan')
                     ->visible(fn () => auth()->user()?->isOwner()),
