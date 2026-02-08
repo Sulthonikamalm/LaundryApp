@@ -18,7 +18,9 @@ class ListServices extends ListRecords
 
         // DeepSecurity: Tombol Create hanya untuk Owner
         if (auth()->user()?->isOwner()) {
-            $actions[] = Actions\CreateAction::make();
+            $actions[] = Actions\CreateAction::make()
+                ->label('Tambah Layanan')
+                ->icon('heroicon-o-plus');
         }
 
         return $actions;

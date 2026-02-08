@@ -296,29 +296,109 @@ class AdminPanelProvider extends ServiceProvider
             .dark .skeleton {
                 background: linear-gradient(90deg, #3a4643 25%, #44625c 50%, #3a4643 75%);
             }
+
+            /* =====================================================
+               DeepUI FIX: Table Header Alignment (Universal Fix)
+               ===================================================== */
+            
+            /* Target generic header container in Filament Tables */
+            .filament-tables-header, 
+            .fi-ta-header,
+            [class*="filament-tables-header-container"],
+            div:has(> .filament-tables-header-heading) {
+                display: flex !important;
+                flex-wrap: wrap;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 1rem;
+                padding: 1rem 1rem 1rem 0.5rem !important; /* DeepUI: Geser kiri */
+            }
+
+            /* Widget Card Header - Geser ke kiri */
+            .filament-widget-card > header,
+            .filament-tables-container > header,
+            .filament-widget header {
+                padding-left: 0.5rem !important;
+                text-align: left !important;
+            }
+
+            /* Widget Heading - Geser ke kiri */
+            .filament-widget-card h2,
+            .filament-widget header h3,
+            .filament-tables-header h2 {
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+                text-align: left !important;
+            }
+
+            /* Force Heading to take available space */
+            .filament-tables-header-heading,
+            .fi-ta-header-heading,
+            h2.filament-tables-heading {
+                flex: 1;
+                min-width: 200px;
+                margin-bottom: 0 !important;
+            }
+
+            /* Container actions/search */
+            .filament-tables-header-actions,
+            .fi-ta-actions,
+            .filament-tables-search-container {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            /* Specific Search Input Fix */
+            input[type="search"],
+            .filament-tables-search-input input {
+                min-width: 250px !important;
+            }
+
+            /* Description positioning - FORCE BREAK LINE */
+            .filament-tables-header p,
+            .filament-tables-header .text-sm:not(.filament-tables-search-input input),
+            .fi-ta-header-description {
+                 flex-basis: 100%;
+                 width: 100%;
+                 margin-top: 0.25rem;
+                 color: var(--dg-medium);
+                 font-size: 0.875rem;
+                 order: 3; /* Ensure description is visually last */
+                 line-height: 1.25;
+            }
+
+            /* Actions Container - Keep inline with heading */
+            .filament-tables-header-actions,
+            .filament-tables-search-container {
+                order: 2; /* Search next to Heading (1) */
+                margin-left: auto; /* Push to right */
+            }
+
+            /* Alert Widget Styling - Red Border */
+            .filament-widget[class*="Overdue"],
+            .filament-widget[class*="overdue"] {
+                border-left: 6px solid #ef4444 !important;
+                background-color: #fef2f2 !important;
+            }
+            
+            .dark .filament-widget[class*="Overdue"],
+            .dark .filament-widget[class*="overdue"] {
+                background-color: rgba(69, 10, 10, 0.4) !important;
+                border-color: #ef4444 !important;
+            }
         </style>';
     }
 
     /**
      * Custom JavaScript untuk interaktivitas.
      * 
-     * DeepPerformance: Lazy load widgets.
-     * DeepUI: Dark mode toggle.
+     * DeepUI: Dark mode persistence.
      */
     protected function getCustomJs(): string
     {
         return '
         <script>
-            // DeepPerformance: Lazy load widgets setelah page render
-            document.addEventListener("DOMContentLoaded", function() {
-                // Trigger widget load setelah 100ms
-                setTimeout(function() {
-                    if (window.Livewire) {
-                        Livewire.emit("loadWidget");
-                    }
-                }, 100);
-            });
-
             // DeepUI: Persist dark mode preference
             const darkModeKey = "silaundry_dark_mode";
             

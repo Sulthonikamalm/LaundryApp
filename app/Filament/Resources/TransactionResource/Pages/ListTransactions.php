@@ -17,7 +17,9 @@ class ListTransactions extends ListRecords
     protected function getActions(): array
     {
         $actions = [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Buat Transaksi')
+                ->icon('heroicon-o-plus'),
         ];
 
         // DeepSecurity: Export hanya untuk Owner

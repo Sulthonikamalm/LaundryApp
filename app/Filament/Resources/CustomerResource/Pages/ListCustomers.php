@@ -15,7 +15,9 @@ class ListCustomers extends ListRecords
     protected function getActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Tambah Pelanggan')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }

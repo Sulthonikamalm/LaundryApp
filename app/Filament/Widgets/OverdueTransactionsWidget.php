@@ -10,41 +10,54 @@ use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * OverdueTransactionsWidget - Daftar Cucian Terlambat
+ * OverdueTransactionsWidget - Alert Cucian Terlambat
  * 
- * DeepUI: Tabel transaksi yang melewati estimasi selesai.
- * DeepDive: Menggunakan Eloquent Scope untuk logika overdue.
- * DeepThinking: Alert visual untuk prioritas operasional.
+ * DeepUI: Widget untuk menampilkan transaksi yang melewati estimasi selesai.
+ * DeepFix: Menggunakan API Filament v2 yang benar.
  */
 class OverdueTransactionsWidget extends BaseWidget
 {
+    // DeepUI: Judul widget (tampil di header card)
     protected static ?string $heading = '⚠️ Cucian Melewati Estimasi';
 
     protected static ?int $sort = 3;
 
     protected int | string | array $columnSpan = 'full';
 
-    // DeepPerformance: Disable polling to reduce server load
+    // DeepPerformance: No polling
     protected static ?string $pollingInterval = null;
+
+    /**
+     * DeepFix: Dummy method untuk backward compatibility
+     */
+    public function loadWidget(): void {}
+
+    /**
+     * DeepUI: Penjelasan singkat di bawah heading
+     */
+    protected function getTableDescription(): ?string
+    {
+        return 'Transaksi yang melewati tanggal estimasi selesai. Prioritas tinggi!';
+    }
 
     protected function getTableQuery(): Builder
     {
-        // DeepPerformance: Use cached query results (5 minutes)
         return Transaction::query()
             ->whereIn('status', ['pending', 'processing'])
             ->where('estimated_completion_date', '<', now())
-            ->with(['customer'])
+            ->with(['customer:id,name,phone_number'])
             ->orderBy('estimated_completion_date', 'asc')
-            ->limit(10); // DeepPerformance: Limit results
+            ->limit(10);
     }
 
     protected function getTableColumns(): array
     {
         return [
             Tables\Columns\TextColumn::make('transaction_code')
-                ->label('Kode Nota')
+                ->label('Kode')
                 ->weight('bold')
-                ->searchable(),
+                ->searchable()
+                ->sortable(),
 
             Tables\Columns\TextColumn::make('customer.name')
                 ->label('Pelanggan')
@@ -52,15 +65,17 @@ class OverdueTransactionsWidget extends BaseWidget
 
             Tables\Columns\TextColumn::make('customer.phone_number')
                 ->label('Telepon')
-                ->copyable(),
+                ->copyable()
+                ->icon('heroicon-o-phone'),
 
             Tables\Columns\TextColumn::make('estimated_completion_date')
-                ->label('Estimasi Selesai')
-                ->date('d/m/Y')
-                ->color('danger'),
+                ->label('Deadline')
+                ->date('d M Y')
+                ->color('danger')
+                ->sortable(),
 
             Tables\Columns\TextColumn::make('days_overdue')
-                ->label('Keterlambatan')
+                ->label('Terlambat')
                 ->getStateUsing(function (Transaction $record) {
                     $days = now()->diffInDays($record->estimated_completion_date);
                     return $days . ' hari';
@@ -71,8 +86,8 @@ class OverdueTransactionsWidget extends BaseWidget
             Tables\Columns\BadgeColumn::make('status')
                 ->label('Status')
                 ->colors([
-                    'secondary' => 'pending',
-                    'warning' => 'processing',
+                    'warning' => 'pending',
+                    'primary' => 'processing',
                 ]),
         ];
     }
@@ -81,19 +96,17 @@ class OverdueTransactionsWidget extends BaseWidget
     {
         return [
             Tables\Actions\Action::make('view')
-                ->label('Lihat')
+                ->label('Detail')
                 ->icon('heroicon-o-eye')
-                ->url(fn (Transaction $record): string => route('filament.resources.transactions.view', $record)),
+                ->url(fn (Transaction $record): string => 
+                    route('filament.resources.transactions.view', $record)
+                ),
         ];
     }
 
+    // DeepPerformance: Disable pagination (no COUNT query)
     protected function isTablePaginationEnabled(): bool
     {
         return false;
-    }
-
-    protected function getTableRecordsPerPage(): int
-    {
-        return 5;
     }
 }

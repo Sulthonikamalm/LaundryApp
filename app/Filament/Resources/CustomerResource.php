@@ -176,15 +176,15 @@ class CustomerResource extends Resource
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+                Tables\Actions\ViewAction::make()->label('Lihat'),
+                Tables\Actions\EditAction::make()->label('Ubah'),
+                Tables\Actions\DeleteAction::make()->label('Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
+                Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih')
                     ->visible(fn () => auth()->user()?->isOwner()),
-                Tables\Actions\RestoreBulkAction::make()
+                Tables\Actions\RestoreBulkAction::make()->label('Pulihkan')
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->defaultSort('name', 'asc');

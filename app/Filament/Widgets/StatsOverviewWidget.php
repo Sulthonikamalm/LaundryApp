@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Cache;
 /**
  * StatsOverviewWidget - Dashboard KPI Cards
  * 
- * DeepUI: Kartu statistik reaktif untuk Owner.
- * DeepPerformance: Menggunakan aggregate query dan EXTREME caching.
- * DeepReasoning: Semua angka finansial dihitung dari price_at_transaction.
- * DeepTeknik: Lazy loading dengan defer untuk instant page load.
+ * DeepUI Best Practices:
+ * - Visual Hierarchy: KPIs paling penting di posisi pertama
+ * - Simplicity: Data yang actionable, tanpa dekorasi berlebihan
+ * - Performance: Single aggregate query dengan caching
  */
 class StatsOverviewWidget extends BaseWidget
 {
@@ -24,140 +24,83 @@ class StatsOverviewWidget extends BaseWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    // DeepPerformance: DISABLE polling untuk mengurangi roundtrip ke TiDB Frankfurt
-    // User bisa manual refresh jika perlu data terbaru
+    // DeepPerformance: No polling, user can refresh manually
     protected static ?string $pollingInterval = null;
 
-    // DeepPerformance: Lazy load widget untuk instant page render
-    public bool $readyToLoad = false;
-
-    public function mount(): void
-    {
-        // Defer loading sampai user scroll atau idle
-        $this->readyToLoad = false;
-    }
-
+    /**
+     * Backward Compatibility Fix:
+     * Method ini dipanggil oleh script lama yang mungkin masih di-cache browser.
+     * Kita biarkan kosong agar tidak error "Method not found".
+     */
     public function loadWidget(): void
     {
-        $this->readyToLoad = true;
+        // Do nothing. Legacy support.
     }
 
     protected function getCards(): array
     {
-        // DeepPerformance: Return empty state jika belum ready
-        if (!$this->readyToLoad) {
-            return [
-                Card::make('Loading...', '⏳')
-                    ->description('Memuat data...')
-                    ->color('secondary'),
-            ];
-        }
-
-        // DeepPerformance: EXTREME CACHING - 30 menit untuk dashboard stats
-        // Reasoning: Stats tidak perlu real-time, user bisa refresh manual
-        $cacheKey = 'dashboard_stats_' . auth()->id();
-        $cacheTtl = 1800; // 30 menit
-
-        $stats = Cache::remember($cacheKey, $cacheTtl, function () {
+        // DeepPerformance: Cache 5 menit
+        $stats = Cache::remember('dashboard_kpi_' . auth()->id(), 300, function () {
             return $this->calculateStats();
         });
 
         return [
-            // 1. TOTAL OUTSTANDING (Piutang)
+            // 1. PIUTANG AKTIF - Prioritas tinggi, warna merah jika ada
             Card::make('Total Piutang', 'Rp ' . number_format($stats['outstanding'], 0, ',', '.'))
                 ->description('Tagihan belum lunas')
                 ->descriptionIcon('heroicon-o-exclamation-circle')
                 ->color($stats['outstanding'] > 0 ? 'danger' : 'success')
-                ->chart($stats['outstanding_trend'])
-                ->extraAttributes([
-                    'title' => 'Cache: 30 menit. Klik refresh untuk update.',
-                ]),
+                ->chart($stats['outstanding_trend']),
 
-            // 2. PENDAPATAN HARI INI
+            // 2. TRANSAKSI AKTIF - Jumlah cucian yang sedang diproses
+            Card::make('Transaksi Aktif', $stats['pending_count'] + $stats['processing_count'])
+                ->description($stats['pending_count'] . ' pending, ' . $stats['processing_count'] . ' proses')
+                ->descriptionIcon('heroicon-o-lightning-bolt')
+                ->color('primary'),
+
+            // 3. SIAP DIAMBIL - Customer action needed
+            Card::make('Siap Diambil', $stats['ready_count'])
+                ->description('Menunggu pelanggan')
+                ->descriptionIcon('heroicon-o-check-circle')
+                ->color('success'),
+
+            // 4. PENDAPATAN HARI INI
             Card::make('Pendapatan Hari Ini', 'Rp ' . number_format($stats['today_revenue'], 0, ',', '.'))
                 ->description($stats['today_tx_count'] . ' transaksi')
                 ->descriptionIcon('heroicon-o-currency-dollar')
                 ->color('success')
-                ->chart($stats['revenue_trend'])
-                ->extraAttributes([
-                    'title' => 'Cache: 30 menit. Klik refresh untuk update.',
-                ]),
-
-            // 3. TRANSAKSI PENDING
-            Card::make('Cucian Pending', $stats['pending_count'])
-                ->description('Menunggu proses')
-                ->descriptionIcon('heroicon-o-clock')
-                ->color($stats['pending_count'] > 10 ? 'warning' : 'primary')
-                ->extraAttributes([
-                    'title' => 'Cache: 30 menit. Klik refresh untuk update.',
-                ]),
-
-            // 4. SIAP DIAMBIL
-            Card::make('Siap Diambil', $stats['ready_count'])
-                ->description('Menunggu pelanggan')
-                ->descriptionIcon('heroicon-o-check-circle')
-                ->color('success')
-                ->extraAttributes([
-                    'title' => 'Cache: 30 menit. Klik refresh untuk update.',
-                ]),
+                ->chart($stats['revenue_trend']),
         ];
     }
 
-    /**
-     * Refresh cache manually.
-     * 
-     * DeepUI: Allow user to force refresh data.
-     * 
-     * @return void
-     */
-    public function refreshStats(): void
-    {
-        $cacheKey = 'dashboard_stats_' . auth()->id();
-        Cache::forget($cacheKey);
-        
-        $this->emit('refreshWidget');
-        
-        $this->notify('success', 'Data berhasil di-refresh!');
-    }
-
-    /**
-     * Calculate all dashboard statistics.
-     * 
-     * DeepDive: Semua kalkulasi menggunakan database aggregate.
-     * DeepReasoning: Revenue dihitung dari payment completed, bukan total_cost.
-     * 
-     * @return array
-     */
     protected function calculateStats(): array
     {
         $today = now()->toDateString();
 
-        // 1. Outstanding (Total Tagihan Belum Lunas)
-        // DeepReasoning: total_cost - total_paid untuk semua transaksi non-cancelled
+        // 1. Outstanding - Tagihan belum lunas
         $outstanding = Transaction::whereIn('payment_status', ['unpaid', 'partial'])
             ->where('status', '!=', 'cancelled')
             ->selectRaw('COALESCE(SUM(total_cost - total_paid), 0) as outstanding')
             ->value('outstanding') ?? 0;
 
-        // 2. Pendapatan Hari Ini (dari Payment completed)
-        // DeepReasoning: Pendapatan riil = uang yang sudah masuk (payments)
+        // 2. Pendapatan hari ini
         $todayRevenue = Payment::where('status', 'completed')
             ->whereDate('payment_date', $today)
             ->sum('amount') ?? 0;
 
-        // 3. Jumlah Transaksi Hari Ini
+        // 3. Jumlah transaksi hari ini
         $todayTxCount = Transaction::whereDate('order_date', $today)->count();
 
-        // 4. Status Counts (DeepPerformance: Single query with grouping)
+        // 4. Status counts
         $statusCounts = Transaction::whereIn('status', ['pending', 'processing', 'ready'])
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
-        // 5. Trend Data (Last 7 days for sparkline)
-        $outstandingTrend = $this->getOutstandingTrend();
-        $revenueTrend = $this->getRevenueTrend();
+        // 5. Trends (7 hari terakhir)
+        $outstandingTrend = $this->getTrend('outstanding');
+        $revenueTrend = $this->getTrend('revenue');
 
         return [
             'outstanding' => (float) $outstanding,
@@ -171,60 +114,31 @@ class StatsOverviewWidget extends BaseWidget
         ];
     }
 
-    /**
-     * Get outstanding trend for last 7 days.
-     * 
-     * @return array
-     */
-    /**
-     * Get outstanding trend (New Debt Created) for last 7 days.
-     * 
-     * DeepPerformance: Optimized to single Aggregate Query.
-     * Logic changed to "New Outstanding Created" to avoid heavy historical sum.
-     */
-    protected function getOutstandingTrend(): array
+    protected function getTrend(string $type): array
     {
         $startDate = now()->subDays(6)->startOfDay();
-        
-        $data = Transaction::where('created_at', '>=', $startDate)
-            ->selectRaw('DATE(created_at) as date, SUM(total_cost - total_paid) as outstanding')
-            ->groupBy('date')
-            ->pluck('outstanding', 'date')
-            ->toArray();
-
         $trend = [];
+
+        if ($type === 'outstanding') {
+            $data = Transaction::where('created_at', '>=', $startDate)
+                ->selectRaw('DATE(created_at) as date, SUM(total_cost - total_paid) as value')
+                ->groupBy('date')
+                ->pluck('value', 'date')
+                ->toArray();
+        } else {
+            $data = Payment::where('status', 'completed')
+                ->where('payment_date', '>=', $startDate)
+                ->selectRaw('DATE(payment_date) as date, SUM(amount) as value')
+                ->groupBy('date')
+                ->pluck('value', 'date')
+                ->toArray();
+        }
+
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $value = $data[$date] ?? 0; // O(1) Lookup
-            $trend[] = (int) ($value / 1000);
+            $trend[] = (int) (($data[$date] ?? 0) / 1000);
         }
-        
-        return $trend;
-    }
 
-    /**
-     * Get revenue trend for last 7 days.
-     * 
-     * DeepPerformance: Optimized to single Aggregate Query.
-     */
-    protected function getRevenueTrend(): array
-    {
-        $startDate = now()->subDays(6)->startOfDay();
-
-        $data = Payment::where('status', 'completed')
-            ->where('payment_date', '>=', $startDate)
-            ->selectRaw('DATE(payment_date) as date, SUM(amount) as total')
-            ->groupBy('date')
-            ->pluck('total', 'date')
-            ->toArray();
-
-        $trend = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $value = $data[$date] ?? 0; // O(1) Lookup
-            $trend[] = (int) ($value / 1000);
-        }
-        
         return $trend;
     }
 }

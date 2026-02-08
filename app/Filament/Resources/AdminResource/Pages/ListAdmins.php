@@ -13,7 +13,9 @@ class ListAdmins extends ListRecords
     protected function getActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Tambah Staff')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }
