@@ -45,6 +45,9 @@ class Transaction extends Model
         'status',
         'customer_notes',
         'internal_notes',
+        'is_delivery',
+        'delivery_cost',
+        'delivery_address',
     ];
 
     /**
@@ -58,6 +61,8 @@ class Transaction extends Model
         'actual_completion_date' => 'date',
         'total_cost' => 'decimal:2',
         'total_paid' => 'decimal:2',
+        'delivery_cost' => 'decimal:2',
+        'is_delivery' => 'boolean',
     ];
 
     // ========================================

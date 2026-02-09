@@ -276,6 +276,33 @@ class TransactionResource extends Resource
                                     ->hidden(fn (callable $get) => $get('payment_status') === 'unpaid' || blank($get('payment_status'))),
                             ]),
 
+                        // DeepDelivery: Layanan Antar-Jemput
+                        Section::make('Layanan Antar-Jemput')
+                            ->schema([
+                                Forms\Components\Toggle::make('is_delivery')
+                                    ->label('Perlu Diantar?')
+                                    ->helperText('Aktifkan jika pelanggan meminta layanan antar')
+                                    ->reactive()
+                                    ->default(false),
+                                
+                                TextInput::make('delivery_cost')
+                                    ->label('Biaya Ongkir')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->default(0)
+                                    ->minValue(0)
+                                    ->hidden(fn (callable $get) => !$get('is_delivery'))
+                                    ->required(fn (callable $get) => $get('is_delivery')),
+                                
+                                Textarea::make('delivery_address')
+                                    ->label('Alamat Pengiriman')
+                                    ->helperText('Kosongkan jika sama dengan alamat pelanggan')
+                                    ->rows(2)
+                                    ->hidden(fn (callable $get) => !$get('is_delivery')),
+                            ])
+                            ->collapsible()
+                            ->compact(),
+
                         Section::make('Catatan')
                             ->schema([
                                 Textarea::make('customer_notes')
@@ -385,6 +412,51 @@ class TransactionResource extends Resource
                         \Filament\Notifications\Notification::make()
                             ->title('Sedang dikirim')
                             ->body('Pesan WhatsApp sedang diproses di latar belakang.')
+                            ->success()
+                            ->send();
+                    }),
+                
+                // DeepDelivery: Tombol Panggil Kurir (Smart Visibility)
+                Tables\Actions\Action::make('assign_courier')
+                    ->label('Panggil Kurir')
+                    ->icon('heroicon-o-truck')
+                    ->color('warning')
+                    ->visible(function (Transaction $record) {
+                        // DeepLogic: Tombol hanya muncul jika:
+                        // 1. Transaksi ini is_delivery = true
+                        // 2. Status baju = ready (sudah selesai dicuci)
+                        // 3. Belum ada kurir yang ditugaskan (shipment kosong atau cancelled)
+                        return $record->is_delivery 
+                            && $record->status === 'ready'
+                            && !$record->shipments()->whereIn('status', ['pending', 'picked_up', 'delivered'])->exists();
+                    })
+                    ->form([
+                        Select::make('courier_id')
+                            ->label('Pilih Kurir')
+                            ->options(\App\Models\Admin::active()->couriers()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->helperText('Pilih kurir yang akan mengantar pesanan ini'),
+                        
+                        Textarea::make('notes')
+                            ->label('Catatan untuk Kurir')
+                            ->rows(3)
+                            ->placeholder('Contoh: Barang fragile, hati-hati saat membawa'),
+                    ])
+                    ->modalHeading('Tugaskan Kurir')
+                    ->modalButton('Tugaskan Sekarang')
+                    ->action(function (Transaction $record, array $data) {
+                        // DeepState: Create shipment record
+                        $shipment = $record->shipments()->create([
+                            'courier_id' => $data['courier_id'],
+                            'status' => 'pending',
+                            'notes' => $data['notes'] ?? null,
+                            'assigned_at' => now(),
+                        ]);
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Kurir Berhasil Ditugaskan')
+                            ->body('Kurir akan menerima notifikasi tugas baru.')
                             ->success()
                             ->send();
                     }),

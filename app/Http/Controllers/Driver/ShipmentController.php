@@ -31,9 +31,10 @@ class ShipmentController extends Controller
     }
 
     /**
-     * Driver dashboard - list pending deliveries.
+     * Driver dashboard - list assigned deliveries.
      * 
      * DeepPerformance: Cached query + limit untuk responsiveness.
+     * DeepLogic: Hanya tampilkan tugas yang ditugaskan ke driver ini.
      * 
      * @return View
      */
@@ -44,38 +45,44 @@ class ShipmentController extends Controller
 
         // DeepPerformance: Cache dashboard data for 30 seconds
         $data = Cache::remember($cacheKey, 30, function () use ($driver) {
-            // Transaksi yang siap dikirim (status = ready) tanpa shipment completed
-            $pendingDeliveries = Transaction::with(['customer:id,name,address,phone_number'])
-                ->select(['id', 'transaction_code', 'customer_id', 'estimated_completion_date'])
-                ->where('status', 'ready')
-                ->whereDoesntHave('shipments', function ($query) {
-                    $query->where('status', 'completed');
-                })
-                ->orderBy('estimated_completion_date', 'asc')
+            // DeepFilter: Tugas yang ditugaskan ke driver ini
+            // Status: pending (baru ditugaskan) atau picked_up (sedang diantar)
+            $myTasks = Shipment::with([
+                'transaction:id,transaction_code,customer_id,total_cost,delivery_address',
+                'transaction.customer:id,name,address,phone_number'
+            ])
+                ->where('courier_id', $driver->id)
+                ->whereIn('status', ['pending', 'picked_up'])
+                ->orderBy('assigned_at', 'asc')
                 ->limit(20)
                 ->get();
 
-            // Pengiriman hari ini yang ditangani driver ini
-            $myDeliveries = Shipment::with(['transaction:id,transaction_code,customer_id', 'transaction.customer:id,name,address'])
-                ->select(['id', 'transaction_id', 'status', 'customer_address', 'created_at'])
+            // History: Tugas yang sudah selesai hari ini
+            $completedToday = Shipment::with([
+                'transaction:id,transaction_code,customer_id',
+                'transaction.customer:id,name'
+            ])
                 ->where('courier_id', $driver->id)
-                ->whereDate('created_at', today())
-                ->orderBy('created_at', 'desc')
-                ->limit(15)
+                ->where('status', 'delivered')
+                ->whereDate('completed_at', today())
+                ->orderBy('completed_at', 'desc')
+                ->limit(10)
                 ->get();
 
-            return compact('pendingDeliveries', 'myDeliveries');
+            return compact('myTasks', 'completedToday');
         });
 
         return view('driver.dashboard', [
-            'pendingDeliveries' => $data['pendingDeliveries'],
-            'myDeliveries' => $data['myDeliveries'],
+            'myTasks' => $data['myTasks'],
+            'completedToday' => $data['completedToday'],
             'driver' => $driver,
         ]);
     }
 
     /**
-     * Start delivery - assign driver to transaction.
+     * Start delivery - mark shipment as picked up.
+     * 
+     * DeepLogic: Driver mengambil barang dari laundry dan mulai perjalanan.
      * 
      * @param Transaction $transaction
      * @return RedirectResponse
@@ -84,32 +91,22 @@ class ShipmentController extends Controller
     {
         $driver = auth()->guard('driver')->user();
 
-        // Check if shipment already exists
-        $existingShipment = Shipment::where('transaction_id', $transaction->id)
-            ->where('status', '!=', 'failed')
-            ->first();
+        // DeepSecurity: Hanya shipment yang ditugaskan ke driver ini
+        $shipment = Shipment::where('transaction_id', $transaction->id)
+            ->where('courier_id', $driver->id)
+            ->where('status', 'pending')
+            ->firstOrFail();
 
-        if ($existingShipment) {
-            return back()->with('error', 'Pengiriman sudah diproses.');
-        }
-
-        // DeepState: Auto-update transaction status to 'processing' (in delivery)
-        // Note: Some systems prefer staying 'ready' until delivered, but usually tracking implies distinct status.
-        // For now we keep transaction status as is, or update if business logic requires.
-        // Assuming we just track shipment status.
-
-        // Create shipment record
-        Shipment::create([
-            'transaction_id' => $transaction->id,
-            'courier_id' => $driver->id,
-            'shipment_type' => 'delivery',
-            'status' => 'in_progress',
-            'scheduled_at' => now(),
-            'customer_address' => $transaction->customer->address,
+        // Update status ke picked_up (barang sudah diambil, dalam perjalanan)
+        $shipment->update([
+            'status' => 'picked_up',
         ]);
 
+        // Clear cache
+        Cache::forget("driver_dashboard_{$driver->id}");
+
         return redirect()->route('driver.delivery.show', $transaction)
-            ->with('success', 'Pengiriman dimulai!');
+            ->with('success', 'Pengiriman dimulai! Hati-hati di jalan.');
     }
 
     /**
@@ -153,9 +150,10 @@ class ShipmentController extends Controller
 
         $driver = auth()->guard('driver')->user();
 
+        // DeepSecurity: Hanya shipment yang ditugaskan ke driver ini
         $shipment = Shipment::where('transaction_id', $transaction->id)
             ->where('courier_id', $driver->id)
-            ->where('status', '!=', 'completed')
+            ->where('status', 'picked_up')
             ->firstOrFail();
 
         // DeepDive: Upload ke Cloudinary dengan optimasi
@@ -166,7 +164,7 @@ class ShipmentController extends Controller
 
         // Update shipment
         $shipment->update([
-            'status' => 'completed',
+            'status' => 'delivered',
             'completed_at' => now(),
             'photo_proof_url' => $proofUrl,
             'notes' => $validated['notes'] ?? null,
@@ -184,6 +182,9 @@ class ShipmentController extends Controller
             'new_status' => 'completed',
             'notes' => 'Pengiriman selesai oleh kurir: ' . ($validated['notes'] ?? '-'),
         ]);
+
+        // Clear cache
+        Cache::forget("driver_dashboard_{$driver->id}");
 
         return redirect()->route('driver.dashboard')
             ->with('success', 'Pengiriman selesai! Bukti foto sudah disimpan.');

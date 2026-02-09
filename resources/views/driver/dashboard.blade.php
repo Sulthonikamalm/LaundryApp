@@ -41,11 +41,11 @@
         <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-5 grid grid-cols-2 gap-4">
             <div class="text-center py-3 border-r border-slate-100">
                 <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Tugas Aktif</p>
-                <p class="text-3xl font-bold text-slate-900 mt-1">{{ $myDeliveries->where('status', '!=', 'completed')->count() }}</p>
+                <p class="text-3xl font-bold text-slate-900 mt-1">{{ $myTasks->count() }}</p>
             </div>
             <div class="text-center py-3">
                 <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">Selesai Hari Ini</p>
-                <p class="text-3xl font-bold text-emerald-600 mt-1">{{ $myDeliveries->where('status', 'completed')->count() }}</p>
+                <p class="text-3xl font-bold text-emerald-600 mt-1">{{ $completedToday->count() }}</p>
             </div>
         </div>
     </div>
@@ -54,94 +54,76 @@
     <main class="px-6 pt-8 pb-24 space-y-8">
         
         {{-- Active Deliveries Section --}}
-        @if($myDeliveries->where('status', '!=', 'completed')->count() > 0)
+        @if($myTasks->count() > 0)
         <section>
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-1 h-6 bg-emerald-500 rounded-full"></div>
-                <h2 class="text-lg font-bold text-slate-900">Sedang Dikerjakan</h2>
+                <h2 class="text-lg font-bold text-slate-900">Tugas Saya</h2>
             </div>
             
             <div class="space-y-4">
-                @foreach($myDeliveries->where('status', '!=', 'completed') as $shipment)
+                @foreach($myTasks as $shipment)
                 <article class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all">
                     <div class="flex justify-between items-start mb-4">
                         <span class="px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-lg font-mono">
                             {{ $shipment->transaction->transaction_code }}
                         </span>
+                        @if($shipment->status === 'pending')
+                        <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg">
+                            Baru Ditugaskan
+                        </span>
+                        @else
                         <span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-lg">
                             Dalam Perjalanan
                         </span>
+                        @endif
                     </div>
                     
                     <h3 class="text-lg font-bold text-slate-900 mb-1">{{ $shipment->transaction->customer->name }}</h3>
                     
-                    <div class="flex items-start gap-2 text-slate-600 text-sm mb-5">
+                    <div class="flex items-start gap-2 text-slate-600 text-sm mb-3">
                         <svg class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <span class="leading-relaxed">{{ $shipment->customer_address }}</span>
+                        <span class="leading-relaxed">{{ $shipment->transaction->delivery_address ?? $shipment->transaction->customer->address }}</span>
                     </div>
 
+                    <div class="flex items-center gap-2 text-slate-500 text-xs mb-5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $shipment->transaction->customer->phone_number) }}" 
+                           class="hover:text-emerald-600 font-medium">
+                            {{ $shipment->transaction->customer->phone_number }}
+                        </a>
+                    </div>
+
+                    @if($shipment->status === 'pending')
+                    <form action="{{ route('driver.delivery.start', $shipment->transaction_id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="flex items-center justify-center w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Ambil Barang & Mulai
+                        </button>
+                    </form>
+                    @else
                     <a href="{{ route('driver.delivery.show', $shipment->transaction_id) }}" 
                        class="flex items-center justify-center w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors">
-                        Lanjutkan
+                        Selesaikan Pengiriman
                         <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </a>
+                    @endif
                 </article>
                 @endforeach
             </div>
         </section>
-        @endif
-
-        {{-- Pending Deliveries Section --}}
+        @else
         <section>
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-6 bg-slate-300 rounded-full"></div>
-                    <h2 class="text-lg font-bold text-slate-900">Siap Diambil</h2>
-                </div>
-                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
-                    {{ $pendingDeliveries->count() }} tugas
-                </span>
-            </div>
-
-            @if($pendingDeliveries->count() > 0)
-            <div class="space-y-4">
-                @foreach($pendingDeliveries as $trx)
-                <article class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h3 class="font-bold text-slate-900">{{ $trx->customer->name }}</h3>
-                            <p class="text-xs text-slate-400 font-mono mt-0.5">{{ $trx->transaction_code }}</p>
-                        </div>
-                        <div class="p-2 bg-slate-100 rounded-lg text-slate-500">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                            </svg>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-2 text-slate-500 text-sm mb-5 p-3 bg-slate-50 rounded-xl">
-                        <svg class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span class="truncate">{{ $trx->customer->address ?? 'Alamat tidak tersedia' }}</span>
-                    </div>
-
-                    <form action="{{ route('driver.delivery.start', $trx->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full py-3 border-2 border-emerald-500 text-emerald-600 font-semibold rounded-xl hover:bg-emerald-500 hover:text-white transition-colors">
-                            Ambil Tugas
-                        </button>
-                    </form>
-                </article>
-                @endforeach
-            </div>
-            @else
             <div class="bg-slate-100 rounded-2xl p-8 text-center">
                 <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -151,8 +133,34 @@
                 <p class="text-slate-500 font-medium">Tidak ada tugas tersedia</p>
                 <p class="text-slate-400 text-sm mt-1">Tarik ke bawah untuk refresh</p>
             </div>
-            @endif
         </section>
+        @endif
+
+        {{-- Completed Today Section --}}
+        @if($completedToday->count() > 0)
+        <section>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-1 h-6 bg-slate-300 rounded-full"></div>
+                <h2 class="text-lg font-bold text-slate-900">Selesai Hari Ini</h2>
+            </div>
+            
+            <div class="space-y-3">
+                @foreach($completedToday as $shipment)
+                <article class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-slate-900">{{ $shipment->transaction->customer->name }}</p>
+                            <p class="text-xs text-slate-400 font-mono mt-0.5">{{ $shipment->transaction->transaction_code }}</p>
+                        </div>
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg">
+                            ✓ Selesai
+                        </span>
+                    </div>
+                </article>
+                @endforeach
+            </div>
+        </section>
+        @endif
     </main>
 </div>
 @endsection

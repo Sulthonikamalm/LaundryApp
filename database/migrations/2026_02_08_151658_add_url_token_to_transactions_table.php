@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->string('url_token', 64)->after('transaction_code')->unique()->index();
+            // DeepSafety: Check if column exists before adding
+            if (!Schema::hasColumn('transactions', 'url_token')) {
+                $table->string('url_token', 64)->after('transaction_code')->unique()->index();
+            }
         });
     }
 

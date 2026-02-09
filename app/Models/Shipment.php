@@ -16,6 +16,7 @@ class Shipment extends Model
         'shipment_type',
         'scheduled_at',
         'completed_at',
+        'assigned_at',
         'status',
         'customer_address',
         'photo_proof_url',
@@ -25,6 +26,7 @@ class Shipment extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
         'completed_at' => 'datetime',
+        'assigned_at' => 'datetime',
     ];
 
     public function transaction()
