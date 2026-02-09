@@ -406,10 +406,13 @@ class TransactionResource extends Resource
                         Forms\Components\FileUpload::make('photo')
                             ->label('Foto Bukti')
                             ->image()
+                            ->disk('public')
+                            ->directory('temp-activity-photos')
                             ->maxSize(5120) // 5MB
                             ->required()
                             ->helperText('Upload foto aktivitas (max 5MB)')
-                            ->imagePreviewHeight('200'),
+                            ->imagePreviewHeight('200')
+                            ->visibility('private'),
                         
                         Textarea::make('notes')
                             ->label('Catatan (Opsional)')
@@ -425,19 +428,51 @@ class TransactionResource extends Resource
                     ->modalButton('Simpan & Upload')
                     ->modalWidth('lg')
                     ->action(function (Transaction $record, array $data) {
-                        // DeepState: Upload foto ke Cloudinary
-                        $cloudinary = new \App\Services\CloudinaryService();
-                        $photoUrl = $cloudinary->uploadActivityPhoto(
-                            $data['photo'],
-                            $record->transaction_code,
-                            $data['activity_type']
-                        );
+                        // DeepFix: Filament FileUpload sudah menyimpan file ke storage/app/public
+                        // Kita bisa langsung gunakan URL-nya atau upload ke Cloudinary
+                        
+                        $photoPath = $data['photo'];
+                        $photoUrl = null;
+                        
+                        // Try upload to Cloudinary, fallback to local storage URL
+                        try {
+                            $fullPath = storage_path('app/public/' . $photoPath);
+                            
+                            if (file_exists($fullPath)) {
+                                // Create UploadedFile instance
+                                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                                    $fullPath,
+                                    basename($photoPath),
+                                    mime_content_type($fullPath),
+                                    null,
+                                    true
+                                );
+                                
+                                // Upload to Cloudinary
+                                $cloudinary = new \App\Services\CloudinaryService();
+                                $photoUrl = $cloudinary->uploadActivityPhoto(
+                                    $uploadedFile,
+                                    $record->transaction_code,
+                                    $data['activity_type']
+                                );
+                                
+                                // Delete temp file after successful upload
+                                \Storage::disk('public')->delete($photoPath);
+                            }
+                        } catch (\Exception $e) {
+                            \Log::warning("Cloudinary upload failed, using local storage: " . $e->getMessage());
+                        }
+                        
+                        // Fallback: Use local storage URL if Cloudinary failed
+                        if (!$photoUrl) {
+                            $photoUrl = asset('storage/' . $photoPath);
+                        }
 
                         // DeepAudit: Create status log dengan foto
                         $record->statusLogs()->create([
                             'changed_by' => auth()->id(),
                             'previous_status' => $record->status,
-                            'new_status' => $record->status, // Status tidak berubah, hanya log aktivitas
+                            'new_status' => $record->status,
                             'activity_type' => $data['activity_type'],
                             'notes' => $data['notes'] ?? null,
                             'photo_url' => $photoUrl,
@@ -508,12 +543,16 @@ class TransactionResource extends Resource
                     ->modalHeading('Tugaskan Kurir')
                     ->modalButton('Tugaskan Sekarang')
                     ->action(function (Transaction $record, array $data) {
-                        // DeepState: Create shipment record
+                        // DeepState: Create shipment record dengan data lengkap
                         $shipment = $record->shipments()->create([
                             'courier_id' => $data['courier_id'],
                             'status' => 'pending',
                             'notes' => $data['notes'] ?? null,
                             'assigned_at' => now(),
+                            // DeepFix: Isi kolom yang diperlukan
+                            'shipment_type' => 'delivery',
+                            'customer_address' => $record->delivery_address ?? $record->customer->address,
+                            'scheduled_at' => now(), // Langsung berangkat
                         ]);
                         
                         \Filament\Notifications\Notification::make()

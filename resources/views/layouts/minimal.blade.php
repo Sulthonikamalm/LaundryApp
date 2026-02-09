@@ -80,19 +80,19 @@
             line-height: 1.2;
         }
         
-        /* DeepGreen Color Palette */
+        /* DeepSky Color Palette - Matching Admin Dashboard */
         :root {
-            --brand-black: #2e2d2c;
-            --brand-dark: #3a4643;
-            --brand-deep: #44625c;
-            --brand-primary: #4c7d73;
-            --brand-medium: #569a8c;
-            --brand-light: #5cb9a6;
-            --brand-accent: #60d9c3;
-            --brand-surface: #b1ece0;
-            --brand-subtle: #d7f5ef;
-            --brand-white: #ecfaf6;
-            --brand-bg: #f5fcfa;
+            --brand-black: #0f172a;
+            --brand-dark: #334155;
+            --brand-deep: #0369a1;
+            --brand-primary: #0ea5e9;
+            --brand-medium: #38bdf8;
+            --brand-light: #7dd3fc;
+            --brand-accent: #bae6fd;
+            --brand-surface: #e0f2fe;
+            --brand-subtle: #f0f9ff;
+            --brand-white: #f8fafc;
+            --brand-bg: #ffffff;
         }
 
         /* Utility Classes - Minimal Set */
@@ -209,7 +209,7 @@
         .active\:translate-y-\[1px\]:active { transform: translateY(1px); }
         
         /* Focus States */
-        .focus\:ring-4:focus { box-shadow: 0 0 0 4px rgba(76, 125, 115, 0.15); }
+        .focus\:ring-4:focus { box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15); }
         .focus\:border-brand-primary:focus { border-color: var(--brand-primary) !important; }
         .focus\:bg-white:focus { background-color: #fff; }
         .focus\:outline-none:focus { outline: none; }

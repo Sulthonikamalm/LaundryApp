@@ -27,7 +27,7 @@
                         <h2 class="font-display text-2xl font-bold text-gray-900">Status Pesanan</h2>
                         <p class="text-sm text-gray-500 mt-1">Update terakhir: <span class="font-medium text-brand-primary">{{ $transaction->updated_at->format('d M Y, H:i') }}</span></p>
                     </div>
-                    <div class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider {{ $transaction->status == 'completed' ? 'bg-green-100 text-green-700' : 'bg-brand-primary/10 text-brand-primary' }}">
+                    <div class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider {{ $transaction->status == 'completed' ? 'bg-sky-100 text-sky-700' : 'bg-brand-primary/10 text-brand-primary' }}">
                         {{ ucfirst($transaction->status) }}
                     </div>
                 </div>
@@ -241,10 +241,10 @@
                 @php
                     $latestShipment = $transaction->shipments()->latest()->first();
                 @endphp
-                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl shadow-lg border border-emerald-200/50 overflow-hidden">
-                    <div class="px-8 py-6 border-b border-emerald-200/50 bg-white/50 flex justify-between items-center">
+                <div class="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl shadow-lg border border-sky-200/50 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-sky-200/50 bg-white/50 flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v1a1 1 0 001 1h1m10-3a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v1a1 1 0 001 1h1"/>
                                 </svg>
@@ -256,7 +256,7 @@
                         @elseif($latestShipment->status === 'picked_up')
                         <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full animate-pulse">Dalam Perjalanan</span>
                         @elseif($latestShipment->status === 'delivered')
-                        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">✓ Terkirim</span>
+                        <span class="px-3 py-1 bg-sky-100 text-sky-700 text-xs font-bold rounded-full">✓ Terkirim</span>
                         @endif
                     </div>
                     
@@ -264,7 +264,7 @@
                         {{-- Courier Info --}}
                         @if($latestShipment->courier)
                         <div class="flex items-center gap-4 p-4 bg-white/70 rounded-2xl">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center font-bold text-lg">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 text-white flex items-center justify-center font-bold text-lg">
                                 {{ substr($latestShipment->courier->name, 0, 1) }}
                             </div>
                             <div>
@@ -276,7 +276,7 @@
 
                         {{-- Delivery Address --}}
                         <div class="flex items-start gap-3 p-4 bg-white/70 rounded-2xl">
-                            <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-5 h-5 text-sky-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
@@ -290,7 +290,7 @@
                         <div class="space-y-3">
                             @if($latestShipment->assigned_at)
                             <div class="flex items-center gap-3 text-sm">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-sky-500"></div>
                                 <span class="text-gray-600">Ditugaskan:</span>
                                 <span class="font-medium text-gray-900">{{ $latestShipment->assigned_at->format('d M Y, H:i') }}</span>
                             </div>
@@ -306,7 +306,7 @@
                             
                             @if($latestShipment->status === 'delivered' && $latestShipment->completed_at)
                             <div class="flex items-center gap-3 text-sm">
-                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-sky-500"></div>
                                 <span class="text-gray-600">Diterima:</span>
                                 <span class="font-medium text-gray-900">{{ $latestShipment->completed_at->format('d M Y, H:i') }}</span>
                             </div>
@@ -315,7 +315,7 @@
 
                         {{-- Delivery Proof Photo --}}
                         @if($latestShipment->status === 'delivered' && $latestShipment->photo_proof_url)
-                        <div class="pt-4 border-t border-emerald-200/50">
+                        <div class="pt-4 border-t border-sky-200/50">
                             <p class="text-xs text-gray-500 font-medium mb-3">Bukti Serah Terima</p>
                             <img 
                                 src="{{ $latestShipment->photo_proof_url }}" 
@@ -377,7 +377,7 @@
                 
                 @if($transaction->payment_status == 'paid')
                     <div class="mt-6 flex flex-col items-center justify-center py-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative z-10">
-                        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-green-500/30 animate-bounce-slow">
+                        <div class="w-16 h-16 rounded-full bg-sky-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-sky-500/30 animate-bounce-slow">
                              <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                         <p class="font-bold text-2xl tracking-tight">LUNAS</p>
@@ -407,7 +407,7 @@
             <!-- Help Contact -->
             <div class="text-center pt-4">
                 <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/\D/', '', config('app.phone'))) }}" class="inline-flex items-center text-gray-500 font-medium hover:text-brand-primary transition-colors text-sm group">
-                    <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <span class="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 4.255 4.045-.809c1.306.391 2.934.332 4.091-.32 1.454-1.002 1.559-2.28 1.559-2.28s1.618-.475 2.106-.723c.316-.16.536-.341.602-.551.053-.169.034-.959-.39-1.282-.249-.19-.714-.403-.984-.537-.253-.122-.505-.175-.765.234-.239.375-.515.753-.787.893-.243.125-.975-.125-2.062-1.218-.949-.953-1.161-1.636-1.047-1.896.16-.364.673-1.144.757-1.341.077-.183.024-.467-.146-.739-.148-.236-1.161-1.954-1.161-1.954s-.308-.432-.619-.387a1.4 1.4 0 0 0-.573.182z"/></svg>
                     </span>
                     Butuh bantuan? Hubungi WhatsApp kami

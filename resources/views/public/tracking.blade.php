@@ -12,7 +12,7 @@
         
         <!-- Brand / Logo Area -->
         <div class="text-center mb-12">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background-color: rgba(76, 125, 115, 0.05); border-radius: 28px; margin-bottom: 1.5rem; color: var(--brand-primary); box-shadow: 0 0 0 1px rgba(76,125,115,0.1);">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background-color: rgba(14, 165, 233, 0.05); border-radius: 28px; margin-bottom: 1.5rem; color: var(--brand-primary); box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.1);">
                 <svg xmlns="http://www.w3.org/2000/svg" style="width: 40px; height: 40px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
@@ -93,9 +93,9 @@
             <button 
                 type="submit"
                 class="w-full group relative overflow-hidden"
-                style="padding: 1.25rem; background-color: var(--brand-primary); color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.125rem; border-radius: 1rem; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(76, 125, 115, 0.3); transition: all 0.3s; margin-top: 2rem;"
-                onmouseover="this.style.backgroundColor='var(--brand-deep)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 20px 25px -5px rgba(76, 125, 115, 0.4)';"
-                onmouseout="this.style.backgroundColor='var(--brand-primary)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(76, 125, 115, 0.3)';"
+                style="padding: 1.25rem; background-color: var(--brand-primary); color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.125rem; border-radius: 1rem; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3); transition: all 0.3s; margin-top: 2rem;"
+                onmouseover="this.style.backgroundColor='var(--brand-deep)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 20px 25px -5px rgba(14, 165, 233, 0.4)';"
+                onmouseout="this.style.backgroundColor='var(--brand-primary)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(14, 165, 233, 0.3)';"
                 onmousedown="this.style.transform='translateY(1px)';"
                 onmouseup="this.style.transform='translateY(-2px)';"
             >
