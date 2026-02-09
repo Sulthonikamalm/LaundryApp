@@ -109,7 +109,7 @@ class SendWhatsappJob implements ShouldQueue
     {
         $name = $this->transaction->customer->name;
         $code = $this->transaction->transaction_code;
-        $appName = "SiLaundry"; // Fixed name
+        $appName = config('app.name', 'SiLaundry');
 
         $url = route('public.tracking.show', ['token' => $this->transaction->url_token]);
 
@@ -172,9 +172,9 @@ class SendWhatsappJob implements ShouldQueue
                 $paidStatusFull = $statusPayment . $paymentMethodName;
 
                 return "Halo Kak {$name} 👋,\n"
-                    . "Terima kasih telah mempercayakan pakaian kesayanganmu di *SiLaundry*.\n\n"
-                    . "SiLaundry\n"
-                    . "Jl. Manyung 1 / 23 Pacungan, No. HP 0821 8846 7793\n"
+                    . "Terima kasih telah mempercayakan pakaian kesayanganmu di *{$appName}*.\n\n"
+                    . "{$appName}\n"
+                    . config('app.address') . ", No. HP " . config('app.phone') . "\n"
                     . "====================\n"
                     . "Tanggal : {$orderDate}\n"
                     . "No Nota : {$code}\n"

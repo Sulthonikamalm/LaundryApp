@@ -16,6 +16,10 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    
+    'address' => env('APP_ADDRESS', 'Jl. Default'),
+    
+    'phone' => env('APP_PHONE', '0800000000'),
 
     /*
     |--------------------------------------------------------------------------
