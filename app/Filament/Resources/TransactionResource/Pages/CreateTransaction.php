@@ -6,10 +6,13 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
 use Filament\Resources\Pages\CreateRecord;
+use App\Models\Payment;
+use App\Jobs\SendWhatsappJob;
 
 class CreateTransaction extends CreateRecord
 {
     protected static string $resource = TransactionResource::class;
+
 
     /**
      * Disable "Create & Create Another" button.
@@ -21,15 +24,7 @@ class CreateTransaction extends CreateRecord
      */
     protected static bool $canCreateAnother = false;
 
-    /**
-     * Mutate form data before create.
-     * 
-     * DeepSecurity: Auto-set created_by dengan user yang sedang login.
-     * Deepsecrethacking: Ini penting untuk audit trail.
-     * 
-     * @param array $data
-     * @return array
-     */
+
     protected $paymentData = [];
 
     /**
@@ -71,7 +66,7 @@ class CreateTransaction extends CreateRecord
 
         // 1. Handle Initial Payment if amount > 0
         if (!empty($this->paymentData['amount']) && $this->paymentData['amount'] > 0) {
-            \App\Models\Payment::create([
+            Payment::create([
                 'transaction_id' => $this->record->id,
                 'amount' => $this->paymentData['amount'],
                 'payment_method' => $this->paymentData['method'] ?? 'cash',
@@ -87,7 +82,7 @@ class CreateTransaction extends CreateRecord
 
         // 2. Dispatch WhatsApp Job (Correct Place)
         // DeepFix: Kirim setelah semua data siap (termasuk payment)
-        \App\Jobs\SendWhatsappJob::dispatch($this->record, 'new_order');
+        SendWhatsappJob::dispatch($this->record, 'new_order');
     }
 
     /**

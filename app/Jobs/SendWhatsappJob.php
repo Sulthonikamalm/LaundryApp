@@ -173,11 +173,6 @@ class SendWhatsappJob implements ShouldQueue
 
                 return "Halo Kak {$name} 👋,\n"
                     . "Terima kasih telah mempercayakan pakaian kesayanganmu di *SiLaundry*.\n\n"
-                    . "Dicuci-in Laundry\n" // Request used "Dicuci-in Laundry" in header text, but "SiLaundry" in intro? Check user prompt carefully.
-                    // User prompt: "ganti di cuciin laundry itu silaundry... Dicuci-in Laundry ... Jl. Jetis..." 
-                    // User said: "ingat nama laundry kita itu adalah silaundry" 
-                    // But in the sample text he pasted: "Dicuci-in Laundry\nJl. Jetis..."
-                    // Correct Interpretation: REPLACE "Dicuci-in Laundry" with "SiLaundry".
                     . "SiLaundry\n"
                     . "Jl. Manyung 1 / 23 Pacungan, No. HP 0821 8846 7793\n"
                     . "====================\n"
@@ -190,13 +185,9 @@ class SendWhatsappJob implements ShouldQueue
                     . "===================\n"
                     . "Subtotal = Rp. {$total},-\n"
                     . "Diskon = Rp. 0,-\n"
-                    . "Bayar = Rp. {$total},-\n" // This line in sample was "Bayar", usually means "Total Bill" or "To Pay". Sample: "Bayar = Rp. 25k, Dibayar = Rp. 25k".
-                    // Let's stick to standard: Total, Paid, Balance.
+                    . "Bayar = Rp. {$total},-\n"
                     . "Dibayar = Rp. {$paid},-\n"
-                    . "Sisa Tagihan = Rp. {$balance},-\n" // Changed from "Kembalian" to "Sisa Tagihan" as per second example in prompt?
-                    // User prompt example 1: "Kembalian = Rp 0".
-                    // User prompt example 2: "Sisa Tagihan = Rp 0".
-                    // I will use "Sisa Tagihan" as it is safer for partial payments.
+                    . "Sisa Tagihan = Rp. {$balance},-\n"
                     . "====================\n"
                     . "Perkiraan Selesai :\n"
                     . "{$estDate}\n"
