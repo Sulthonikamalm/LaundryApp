@@ -364,12 +364,20 @@ class Transaction extends Model
     {
         $year = date('Y');
         $lastTransaction = self::whereYear('created_at', $year)
-            ->orderBy('id', 'desc')
+            ->orderBy('transaction_code', 'desc')
             ->first();
         
-        $nextNumber = $lastTransaction 
-            ? (int) substr($lastTransaction->transaction_code, -4) + 1 
-            : 1;
+        if (!$lastTransaction) {
+            return sprintf('LDR-%s-%04d', $year, 1);
+        }
+
+        // DeepFix: Robust parsing to handle malformed codes (e.g. LDR-2026--001)
+        if (preg_match('/(\d+)$/', $lastTransaction->transaction_code, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            // Fallback if no digits found at end
+            $nextNumber = (int) substr($lastTransaction->transaction_code, -4) + 1;
+        }
         
         return sprintf('LDR-%s-%04d', $year, $nextNumber);
     }

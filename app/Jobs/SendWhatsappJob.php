@@ -109,21 +109,24 @@ class SendWhatsappJob implements ShouldQueue
     {
         $name = $this->transaction->customer->name;
         $code = $this->transaction->transaction_code;
-        $appName = config('app.name', 'SiLaundry');
+        $appName = "SiLaundry"; // Fixed name
 
         $url = route('public.tracking.show', ['token' => $this->transaction->url_token]);
 
         switch ($this->type) {
             case 'new_order':
                 $itemsList = "";
+                // DeepFix: Ensure details and payments are loaded
+                $this->transaction->loadMissing(['details.service', 'payments']);
+                
                 foreach ($this->transaction->details as $detail) {
-                    $serviceName = $detail->service->service_name ?? 'Layanan';
+                    $serviceName = strtoupper($detail->service->service_name ?? 'LAYANAN');
                     $qty = $detail->quantity;
                     $unit = $detail->unit ?? 'kg';
                     $price = number_format($detail->price_at_transaction, 0, ',', '.');
                     $subtotal = number_format($detail->subtotal, 0, ',', '.');
                     
-                    $itemsList .= "{$serviceName} / {$qty} {$unit}\n";
+                    $itemsList .= "{$serviceName} / {$qty} " . strtoupper($unit) . "\n";
                     $itemsList .= "{$qty} x Rp. {$price},- = Rp. {$subtotal},-\n";
                 }
 
@@ -131,9 +134,20 @@ class SendWhatsappJob implements ShouldQueue
                 $paid = number_format($this->transaction->total_paid, 0, ',', '.');
                 $balance = number_format($this->transaction->total_cost - $this->transaction->total_paid, 0, ',', '.');
                 
-                $cashier = $this->transaction->creator->name ?? 'Admin';
+                $cashier = $this->transaction->creator->name ?? 'Kasir';
                 $orderDate = $this->transaction->order_date->format('d/m/Y - H:i');
+                // Use current time/date of creation if order_date is just date
+                if ($this->transaction->created_at) {
+                    $orderDate = $this->transaction->created_at->format('d/m/Y - H:i');
+                }
+                
                 $estDate = $this->transaction->estimated_completion_date->format('d/m/Y');
+                if ($this->transaction->estimated_completion_date->format('H:i') == '00:00') {
+                    // If no time specific, maybe add default time or just date
+                     // $estDate .= " - 20:00"; // Optional based on request
+                } else {
+                     $estDate .= " - " . $this->transaction->estimated_completion_date->format('H:i');
+                }
                 
                 // Status Payment Logic
                 $statusPayment = match($this->transaction->payment_status) {
@@ -141,10 +155,30 @@ class SendWhatsappJob implements ShouldQueue
                     'partial' => 'Sebagian',
                     default => 'Belum Lunas'
                 };
+                
+                // Payment Method detection (simple check of last payment)
+                $lastPayment = $this->transaction->payments()->latest()->first();
+                $paymentMethodName = "";
+                if ($lastPayment) {
+                    $methodMap = [
+                        'cash' => 'Tunai',
+                        'transfer' => 'Transfer',
+                        'qris' => 'QRIS',
+                    ];
+                    $val = $lastPayment->payment_method ?? '';
+                    $paymentMethodName = " (" . ($methodMap[$val] ?? ucfirst($val)) . ")";
+                }
+                
+                $paidStatusFull = $statusPayment . $paymentMethodName;
 
                 return "Halo Kak {$name} 👋,\n"
-                    . "Terima kasih telah mempercayakan pakaian kesayanganmu di *{$appName}*.\n\n"
-                    . "{$appName}\n"
+                    . "Terima kasih telah mempercayakan pakaian kesayanganmu di *SiLaundry*.\n\n"
+                    . "Dicuci-in Laundry\n" // Request used "Dicuci-in Laundry" in header text, but "SiLaundry" in intro? Check user prompt carefully.
+                    // User prompt: "ganti di cuciin laundry itu silaundry... Dicuci-in Laundry ... Jl. Jetis..." 
+                    // User said: "ingat nama laundry kita itu adalah silaundry" 
+                    // But in the sample text he pasted: "Dicuci-in Laundry\nJl. Jetis..."
+                    // Correct Interpretation: REPLACE "Dicuci-in Laundry" with "SiLaundry".
+                    . "SiLaundry\n"
                     . "Jl. Manyung 1 / 23 Pacungan, No. HP 0821 8846 7793\n"
                     . "====================\n"
                     . "Tanggal : {$orderDate}\n"
@@ -156,14 +190,18 @@ class SendWhatsappJob implements ShouldQueue
                     . "===================\n"
                     . "Subtotal = Rp. {$total},-\n"
                     . "Diskon = Rp. 0,-\n"
-                    . "Bayar = Rp. {$total},-\n" // Assuming logic matches request
+                    . "Bayar = Rp. {$total},-\n" // This line in sample was "Bayar", usually means "Total Bill" or "To Pay". Sample: "Bayar = Rp. 25k, Dibayar = Rp. 25k".
+                    // Let's stick to standard: Total, Paid, Balance.
                     . "Dibayar = Rp. {$paid},-\n"
-                    . "Sisa Tagihan = Rp. {$balance},-\n"
+                    . "Sisa Tagihan = Rp. {$balance},-\n" // Changed from "Kembalian" to "Sisa Tagihan" as per second example in prompt?
+                    // User prompt example 1: "Kembalian = Rp 0".
+                    // User prompt example 2: "Sisa Tagihan = Rp 0".
+                    // I will use "Sisa Tagihan" as it is safer for partial payments.
                     . "====================\n"
                     . "Perkiraan Selesai :\n"
                     . "{$estDate}\n"
                     . "====================\n"
-                    . "Status : {$statusPayment}\n"
+                    . "Status : {$paidStatusFull}\n"
                     . "====================\n"
                     . "Ketentuan:\n"
                     . "1. Pakaian luntur bukan menjadi tanggung jawab kami.\n"

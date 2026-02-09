@@ -62,7 +62,8 @@ class TransactionObserver
         Log::info("Transaction {$transaction->transaction_code} created.");
 
         // DeepAutomation: Kirim WA saat order baru
-        SendWhatsappJob::dispatch($transaction, 'new_order');
+        // SendWhatsappJob::dispatch($transaction, 'new_order');
+        // FIXME: Moved to CreateTransaction::afterCreate to handle payments first
     }
 
     /**

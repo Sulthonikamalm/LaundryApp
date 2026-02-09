@@ -92,7 +92,6 @@ class TransactionResource extends Resource
                                         TextInput::make('transaction_code')
                                             ->label('Kode Nota')
                                             ->disabled()
-                                            ->dehydrated()
                                             ->default(fn () => Transaction::generateTransactionCode()),
 
                                         Select::make('customer_id')
@@ -236,7 +235,8 @@ class TransactionResource extends Resource
                                 Select::make('payment_status')
                                     ->label('Status Pembayaran')
                                     ->options(Transaction::getPaymentStatusOptions())
-                                    ->default('unpaid'),
+                                    ->default('unpaid')
+                                    ->reactive(), // Reactive untuk show/hide payment input
 
                                 // Placeholder for Total Cost visualization
                                 Placeholder::make('total_cost_placeholder')
@@ -249,6 +249,31 @@ class TransactionResource extends Resource
                                     ->dehydrated()
                                     ->numeric()
                                     ->default(0),
+
+                                // DeepPayment: Input pembayaran (Dynamic)
+                                Section::make(fn (callable $get) => $get('payment_status') === 'paid' ? 'Pembayaran Lunas' : 'Pembayaran Awal (DP)')
+                                    ->schema([
+                                        TextInput::make('virtual_payment_amount')
+                                            ->label(fn (callable $get) => $get('payment_status') === 'paid' ? 'Nominal Dibayar' : 'Jumlah DP')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->prefix('Rp')
+                                            ->reactive() // Agar bisa diakses di mutateFormData
+                                            ->required(fn (callable $get) => $get('payment_status') !== 'unpaid'),
+
+                                        Select::make('virtual_payment_method')
+                                            ->label('Metode Bayar')
+                                            ->options([
+                                                'cash' => 'Tunai (Cash)',
+                                                'qris' => 'QRIS',
+                                                'transfer' => 'Transfer Bank',
+                                            ])
+                                            ->default('cash')
+                                            ->required(),
+                                    ])
+                                    ->collapsible()
+                                    ->compact()
+                                    ->hidden(fn (callable $get) => $get('payment_status') === 'unpaid' || blank($get('payment_status'))),
                             ]),
 
                         Section::make('Catatan')
