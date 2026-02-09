@@ -68,7 +68,17 @@ class TrackingController extends Controller
         $cacheKey = "tracking:{$transactionCode}:{$phone}";
         
         $transaction = Cache::remember($cacheKey, 120, function () use ($transactionCode, $phone) {
-            return Transaction::with(['customer', 'details.service', 'payments', 'shipments'])
+            return Transaction::with([
+                'customer', 
+                'details.service', 
+                'payments', 
+                'shipments',
+                'statusLogs' => function ($query) {
+                    // DeepVisual: Load logs dengan foto, urutkan terbaru dulu
+                    $query->with('changedBy')
+                          ->orderBy('created_at', 'desc');
+                }
+            ])
                 ->where('transaction_code', $transactionCode)
                 ->whereHas('customer', function ($query) use ($phone) {
                     // DeepSecrethacking: WAJIB cocok dengan nomor HP
@@ -103,7 +113,16 @@ class TrackingController extends Controller
      */
     public function showByToken(string $token): View
     {
-        $transaction = Transaction::with(['customer', 'details.service', 'payments', 'shipments'])
+        $transaction = Transaction::with([
+            'customer', 
+            'details.service', 
+            'payments', 
+            'shipments',
+            'statusLogs' => function ($query) {
+                $query->with('changedBy')
+                      ->orderBy('created_at', 'desc');
+            }
+        ])
             ->where('url_token', $token)
             ->firstOrFail();
 

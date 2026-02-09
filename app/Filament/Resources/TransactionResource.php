@@ -389,6 +389,68 @@ class TransactionResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+                // DeepVisual: TOMBOL KAMERA - Quick Activity Log
+                Tables\Actions\Action::make('log_activity')
+                    ->label('Foto Aktivitas')
+                    ->icon('heroicon-o-camera')
+                    ->color('primary')
+                    ->visible(fn (Transaction $record) => in_array($record->status, ['pending', 'processing']))
+                    ->form([
+                        Select::make('activity_type')
+                            ->label('Jenis Aktivitas')
+                            ->options(\App\Models\TransactionStatusLog::getActivityTypes())
+                            ->required()
+                            ->searchable()
+                            ->helperText('Pilih aktivitas yang sedang dilakukan'),
+                        
+                        Forms\Components\FileUpload::make('photo')
+                            ->label('Foto Bukti')
+                            ->image()
+                            ->maxSize(5120) // 5MB
+                            ->required()
+                            ->helperText('Upload foto aktivitas (max 5MB)')
+                            ->imagePreviewHeight('200'),
+                        
+                        Textarea::make('notes')
+                            ->label('Catatan (Opsional)')
+                            ->rows(2)
+                            ->placeholder('Contoh: Baju putih dipisah, pakai detergen khusus'),
+                        
+                        Forms\Components\Toggle::make('is_milestone')
+                            ->label('Tandai sebagai Milestone Penting')
+                            ->helperText('Aktivitas ini akan di-highlight di timeline pelanggan')
+                            ->default(false),
+                    ])
+                    ->modalHeading('Log Aktivitas dengan Foto')
+                    ->modalButton('Simpan & Upload')
+                    ->modalWidth('lg')
+                    ->action(function (Transaction $record, array $data) {
+                        // DeepState: Upload foto ke Cloudinary
+                        $cloudinary = new \App\Services\CloudinaryService();
+                        $photoUrl = $cloudinary->uploadActivityPhoto(
+                            $data['photo'],
+                            $record->transaction_code,
+                            $data['activity_type']
+                        );
+
+                        // DeepAudit: Create status log dengan foto
+                        $record->statusLogs()->create([
+                            'changed_by' => auth()->id(),
+                            'previous_status' => $record->status,
+                            'new_status' => $record->status, // Status tidak berubah, hanya log aktivitas
+                            'activity_type' => $data['activity_type'],
+                            'notes' => $data['notes'] ?? null,
+                            'photo_url' => $photoUrl,
+                            'is_milestone' => $data['is_milestone'] ?? false,
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Aktivitas Berhasil Dicatat')
+                            ->body('Foto telah diupload dan pelanggan bisa melihatnya di halaman tracking.')
+                            ->success()
+                            ->send();
+                    }),
+                
                 Tables\Actions\ViewAction::make()->label('Lihat'),
                 Tables\Actions\EditAction::make()->label('Ubah'),
                 Tables\Actions\DeleteAction::make()->label('Hapus')

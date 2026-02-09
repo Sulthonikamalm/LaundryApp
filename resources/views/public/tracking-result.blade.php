@@ -88,6 +88,110 @@
                 </div>
             </div>
 
+            <!-- DeepVisual: TIMELINE AKTIVITAS (JENDELA KACA) -->
+            @if($transaction->statusLogs->where('photo_url', '!=', null)->count() > 0)
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 overflow-hidden">
+                <div class="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-brand-primary/5 to-purple-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-xl bg-brand-primary text-white flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </span>
+                            Perjalanan Cucian Anda
+                        </h3>
+                        <p class="text-xs text-gray-500 mt-1 ml-13">Dokumentasi real-time dari karyawan kami</p>
+                    </div>
+                    <span class="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-bold rounded-full">
+                        {{ $transaction->statusLogs->where('photo_url', '!=', null)->count() }} Foto
+                    </span>
+                </div>
+
+                <div class="p-8">
+                    <!-- Timeline Container -->
+                    <div class="relative">
+                        <!-- Vertical Line -->
+                        <div class="absolute left-[20px] top-[20px] w-[2px] bg-gradient-to-b from-brand-primary via-purple-300 to-gray-200" style="height: calc(100% - 40px);"></div>
+
+                        <!-- Activity Items -->
+                        <div class="space-y-8">
+                            @foreach($transaction->statusLogs->where('photo_url', '!=', null)->sortByDesc('created_at') as $log)
+                            <div class="relative flex gap-6 group">
+                                <!-- Dot Indicator -->
+                                <div class="relative flex-shrink-0 z-10">
+                                    <div class="w-10 h-10 rounded-full {{ $log->is_milestone ? 'bg-gradient-to-br from-amber-400 to-orange-500 ring-4 ring-amber-100' : 'bg-gradient-to-br from-brand-primary to-purple-500' }} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                        @if($log->is_milestone)
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                        @else
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="flex-1 pb-8">
+                                    <!-- Header -->
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div>
+                                            <h4 class="font-bold text-gray-900 text-base flex items-center gap-2">
+                                                {{ $log->getActivityLabel() }}
+                                                @if($log->is_milestone)
+                                                <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Milestone</span>
+                                                @endif
+                                            </h4>
+                                            <p class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ $log->created_at->format('d M Y, H:i') }}
+                                                <span class="text-gray-400">•</span>
+                                                <span class="text-brand-primary font-medium">{{ $log->changedBy->name ?? 'Staff' }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Photo -->
+                                    <div class="relative rounded-2xl overflow-hidden shadow-lg group/photo cursor-pointer hover:shadow-2xl transition-shadow duration-300" data-lightbox="activity-{{ $log->id }}">
+                                        <img 
+                                            src="{{ $log->photo_url }}" 
+                                            alt="{{ $log->getActivityLabel() }}" 
+                                            class="w-full h-64 object-cover group-hover/photo:scale-105 transition-transform duration-500"
+                                            loading="lazy"
+                                        >
+                                        <!-- Overlay Zoom Icon -->
+                                        <div class="absolute inset-0 bg-black/0 group-hover/photo:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                                            <svg class="w-12 h-12 text-white opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notes -->
+                                    @if($log->notes)
+                                    <div class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p class="text-sm text-gray-700 leading-relaxed flex items-start gap-2">
+                                            <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                            </svg>
+                                            <span>{{ $log->notes }}</span>
+                                        </p>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Glassmorphism Items Detail -->
             <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/50 overflow-hidden">
                 <div class="px-8 py-6 border-b border-gray-100 bg-white/50 flex justify-between items-center">
@@ -131,6 +235,108 @@
                     </table>
                 </div>
             </div>
+
+            {{-- DeepDelivery: Delivery Status Card --}}
+            @if($transaction->is_delivery && $transaction->shipments->count() > 0)
+                @php
+                    $latestShipment = $transaction->shipments()->latest()->first();
+                @endphp
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl shadow-lg border border-emerald-200/50 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-emerald-200/50 bg-white/50 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v1a1 1 0 001 1h1m10-3a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v1a1 1 0 001 1h1"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-lg font-bold text-gray-900">Status Pengiriman</h3>
+                        </div>
+                        @if($latestShipment->status === 'pending')
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Menunggu Kurir</span>
+                        @elseif($latestShipment->status === 'picked_up')
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full animate-pulse">Dalam Perjalanan</span>
+                        @elseif($latestShipment->status === 'delivered')
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">✓ Terkirim</span>
+                        @endif
+                    </div>
+                    
+                    <div class="p-8 space-y-6">
+                        {{-- Courier Info --}}
+                        @if($latestShipment->courier)
+                        <div class="flex items-center gap-4 p-4 bg-white/70 rounded-2xl">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center font-bold text-lg">
+                                {{ substr($latestShipment->courier->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium">Kurir Anda</p>
+                                <p class="font-bold text-gray-900">{{ $latestShipment->courier->name }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Delivery Address --}}
+                        <div class="flex items-start gap-3 p-4 bg-white/70 rounded-2xl">
+                            <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium mb-1">Alamat Pengiriman</p>
+                                <p class="text-sm text-gray-700 leading-relaxed">{{ $transaction->delivery_address ?? $transaction->customer->address }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Delivery Timeline --}}
+                        <div class="space-y-3">
+                            @if($latestShipment->assigned_at)
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span class="text-gray-600">Ditugaskan:</span>
+                                <span class="font-medium text-gray-900">{{ $latestShipment->assigned_at->format('d M Y, H:i') }}</span>
+                            </div>
+                            @endif
+                            
+                            @if($latestShipment->status === 'picked_up' || $latestShipment->status === 'delivered')
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                                <span class="text-gray-600">Dalam Perjalanan:</span>
+                                <span class="font-medium text-gray-900">{{ $latestShipment->updated_at->format('d M Y, H:i') }}</span>
+                            </div>
+                            @endif
+                            
+                            @if($latestShipment->status === 'delivered' && $latestShipment->completed_at)
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span class="text-gray-600">Diterima:</span>
+                                <span class="font-medium text-gray-900">{{ $latestShipment->completed_at->format('d M Y, H:i') }}</span>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Delivery Proof Photo --}}
+                        @if($latestShipment->status === 'delivered' && $latestShipment->photo_proof_url)
+                        <div class="pt-4 border-t border-emerald-200/50">
+                            <p class="text-xs text-gray-500 font-medium mb-3">Bukti Serah Terima</p>
+                            <img 
+                                src="{{ $latestShipment->photo_proof_url }}" 
+                                alt="Bukti pengiriman" 
+                                class="w-full h-48 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity shadow-lg"
+                                data-lightbox="delivery-proof"
+                            >
+                            <p class="text-xs text-gray-400 mt-2 text-center">Klik untuk memperbesar</p>
+                        </div>
+                        @endif
+
+                        {{-- Notes --}}
+                        @if($latestShipment->notes)
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                            <p class="text-xs text-amber-700 font-medium mb-1">Catatan Kurir</p>
+                            <p class="text-sm text-amber-900">{{ $latestShipment->notes }}</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Right Column: Info & Payment -->

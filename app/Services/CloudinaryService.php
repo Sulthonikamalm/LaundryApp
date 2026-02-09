@@ -48,15 +48,44 @@ class CloudinaryService
      */
     public function uploadDeliveryProof(UploadedFile $file, string $transactionCode): ?string
     {
+        return $this->upload($file, 'delivery-proofs', $transactionCode);
+    }
+
+    /**
+     * Upload activity photo (washing, ironing, etc).
+     * 
+     * DeepVisual: Foto aktivitas untuk timeline tracking.
+     * 
+     * @param UploadedFile $file
+     * @param string $transactionCode
+     * @param string $activityType
+     * @return string|null URL of uploaded image
+     */
+    public function uploadActivityPhoto(UploadedFile $file, string $transactionCode, string $activityType): ?string
+    {
+        $filename = $transactionCode . '_' . $activityType . '_' . time();
+        return $this->upload($file, 'activity-photos', $filename);
+    }
+
+    /**
+     * Generic upload method.
+     * 
+     * @param UploadedFile $file
+     * @param string $folder
+     * @param string $filename
+     * @return string|null
+     */
+    protected function upload(UploadedFile $file, string $folder, string $filename): ?string
+    {
         // Fallback ke local storage jika Cloudinary tidak dikonfigurasi
         if (!$this->cloudinary) {
-            return $this->uploadToLocal($file, $transactionCode);
+            return $this->uploadToLocal($file, $filename, $folder);
         }
 
         try {
             $result = $this->cloudinary->uploadApi()->upload($file->getRealPath(), [
-                'folder' => 'laundry/delivery-proofs',
-                'public_id' => $transactionCode . '_' . time(),
+                'folder' => "laundry/{$folder}",
+                'public_id' => $filename,
                 'transformation' => [
                     // DeepPerformance: Resize untuk mobile (max 800px)
                     'width' => 800,
@@ -75,7 +104,7 @@ class CloudinaryService
             Log::error("Cloudinary upload failed: {$e->getMessage()}");
             
             // Fallback ke local
-            return $this->uploadToLocal($file, $transactionCode);
+            return $this->uploadToLocal($file, $filename, $folder);
         }
     }
 
@@ -83,13 +112,14 @@ class CloudinaryService
      * Upload to local storage as fallback.
      * 
      * @param UploadedFile $file
-     * @param string $transactionCode
+     * @param string $filename
+     * @param string $folder
      * @return string
      */
-    protected function uploadToLocal(UploadedFile $file, string $transactionCode): string
+    protected function uploadToLocal(UploadedFile $file, string $filename, string $folder = 'delivery-proofs'): string
     {
-        $filename = $transactionCode . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('delivery-proofs', $filename, 'public');
+        $fullFilename = $filename . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs($folder, $fullFilename, 'public');
         
         return asset('storage/' . $path);
     }

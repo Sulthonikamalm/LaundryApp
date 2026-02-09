@@ -83,6 +83,7 @@ class ShipmentController extends Controller
      * Start delivery - mark shipment as picked up.
      * 
      * DeepLogic: Driver mengambil barang dari laundry dan mulai perjalanan.
+     * DeepNotification: Kirim WA ke customer bahwa kurir sedang dalam perjalanan.
      * 
      * @param Transaction $transaction
      * @return RedirectResponse
@@ -102,11 +103,14 @@ class ShipmentController extends Controller
             'status' => 'picked_up',
         ]);
 
+        // DeepNotification: Kirim WA notifikasi ke customer
+        \App\Jobs\SendWhatsappJob::dispatch($transaction, 'delivery_start');
+
         // Clear cache
         Cache::forget("driver_dashboard_{$driver->id}");
 
         return redirect()->route('driver.delivery.show', $transaction)
-            ->with('success', 'Pengiriman dimulai! Hati-hati di jalan.');
+            ->with('success', 'Pengiriman dimulai! Notifikasi telah dikirim ke pelanggan.');
     }
 
     /**
@@ -136,6 +140,7 @@ class ShipmentController extends Controller
      * DeepDive: Upload foto ke Cloudinary.
      * DeepState: Auto-update transaction status ke 'completed'.
      * DeepLog: Mencatat history perubahan status untuk audit.
+     * DeepNotification: Kirim WA konfirmasi pengiriman selesai dengan link foto.
      * 
      * @param Request $request
      * @param Transaction $transaction
@@ -183,10 +188,13 @@ class ShipmentController extends Controller
             'notes' => 'Pengiriman selesai oleh kurir: ' . ($validated['notes'] ?? '-'),
         ]);
 
+        // DeepNotification: Kirim WA konfirmasi selesai dengan link foto bukti
+        \App\Jobs\SendWhatsappJob::dispatch($transaction, 'delivery_complete');
+
         // Clear cache
         Cache::forget("driver_dashboard_{$driver->id}");
 
         return redirect()->route('driver.dashboard')
-            ->with('success', 'Pengiriman selesai! Bukti foto sudah disimpan.');
+            ->with('success', 'Pengiriman selesai! Bukti foto sudah disimpan dan notifikasi terkirim.');
     }
 }
