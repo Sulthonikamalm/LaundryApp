@@ -1,113 +1,131 @@
 @extends('layouts.minimal', ['title' => 'Detail Cucian - ' . $transaction->transaction_code])
 
 @section('content')
-<div class="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-brand-white">
+<div class="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-gray-200">
     <!-- Header Back -->
-    <div class="max-w-4xl mx-auto mb-8">
-        <a href="{{ route('public.tracking') }}" class="inline-flex items-center text-sm font-medium text-brand-dark hover:text-brand-primary transition-colors">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <div class="max-w-5xl mx-auto mb-8">
+        <a href="{{ route('public.tracking') }}" class="inline-flex items-center group text-sm font-medium text-gray-600 hover:text-brand-primary transition-all duration-300">
+            <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </div>
             Kembali ke Pencarian
         </a>
     </div>
 
-    <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <!-- Left Column: Status Timeline & Summary -->
-        <div class="lg:col-span-2 space-y-8">
+        <div class="lg:col-span-2 space-y-6">
             
-            <!-- Status Card -->
-            <div class="bg-white rounded-3xl shadow-soft p-8 border border-brand-surface relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-surface rounded-bl-full opacity-20 pointer-events-none"></div>
-                
-                <h2 class="font-display text-2xl font-bold text-brand-black mb-1">Status Pesanan</h2>
-                <p class="text-sm text-brand-dark mb-8">Update terakhir: {{ $transaction->updated_at->format('d M Y, H:i') }}</p>
+            <!-- Glassmorphism Status Card -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 relative overflow-hidden p-8 transform hover:scale-[1.01] transition-all duration-500">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none"></div>
 
-                <!-- Visual Timeline -->
-                <div class="relative pl-8 border-l-2 border-brand-surface space-y-10">
-                    <!-- Step 1: Pending -->
-                    <div class="relative">
-                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['pending', 'processing', 'ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
-                            @if(in_array($transaction->status, ['pending', 'processing', 'ready', 'completed']))
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            @else
-                                <span class="text-xs font-bold">1</span>
-                            @endif
-                        </div>
-                        <h3 class="text-lg font-bold text-brand-black">Pesanan Diterima</h3>
-                        <p class="text-sm text-brand-dark">Laundry Anda telah kami terima.</p>
+                <div class="relative z-10 flex justify-between items-start mb-8">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-gray-900">Status Pesanan</h2>
+                        <p class="text-sm text-gray-500 mt-1">Update terakhir: <span class="font-medium text-brand-primary">{{ $transaction->updated_at->format('d M Y, H:i') }}</span></p>
                     </div>
+                    <div class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider {{ $transaction->status == 'completed' ? 'bg-green-100 text-green-700' : 'bg-brand-primary/10 text-brand-primary' }}">
+                        {{ ucfirst($transaction->status) }}
+                    </div>
+                </div>
 
-                    <!-- Step 2: Processing -->
-                    <div class="relative">
-                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
-                            @if(in_array($transaction->status, ['processing', 'ready', 'completed']))
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            @else
-                                <span class="text-xs font-bold">2</span>
-                            @endif
-                        </div>
-                        <h3 class="{{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Sedang Dicuci</h3>
-                        <p class="text-sm {{ in_array($transaction->status, ['processing', 'ready', 'completed']) ? 'text-brand-dark' : 'text-brand-dark/60' }}">Pakaian sedang dalam proses pencucian & setrika.</p>
-                    </div>
+                <!-- DeepUI: Dynamic Animated Timeline (Premium) -->
+                <div class="relative" style="padding-left: 0;">
+                    <!-- Single Continuous Vertical Line -->
+                    <div class="absolute left-[20px] top-[20px] w-[2px] bg-gray-300" style="height: calc(100% - 100px);"></div>
 
-                    <!-- Step 3: Ready -->
-                    <div class="relative">
-                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ in_array($transaction->status, ['ready', 'completed']) ? 'bg-brand-primary text-white border-4 border-white shadow-md' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
-                             @if(in_array($transaction->status, ['ready', 'completed']))
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            @else
-                                <span class="text-xs font-bold">3</span>
-                            @endif
-                        </div>
-                        <h3 class="{{ in_array($transaction->status, ['ready', 'completed']) ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Siap Diambil / Diantar</h3>
-                        <p class="text-sm {{ in_array($transaction->status, ['ready', 'completed']) ? 'text-brand-dark' : 'text-brand-dark/60' }}">Laundry bersih, wangi, dan siap kembali ke Anda.</p>
-                    </div>
+                    @php
+                        $steps = [
+                            'pending' => ['title' => 'Pesanan Diterima', 'desc' => 'Laundry Anda telah kami terima.'],
+                            'processing' => ['title' => 'Sedang Dicuci', 'desc' => 'Pakaian sedang dalam proses pencucian & setrika.'],
+                            'ready' => ['title' => 'Siap Diambil', 'desc' => 'Laundry bersih, wangi, dan siap kembali ke Anda.'],
+                            'completed' => ['title' => 'Selesai', 'desc' => 'Terima kasih telah mempercayakan laundry Anda.']
+                        ];
+                        $currentFound = false;
+                        $statuses = array_keys($steps);
+                        $currentIndex = array_search($transaction->status, $statuses);
+                    @endphp
 
-                    <!-- Step 4: Completed -->
-                    <div class="relative">
-                        <div class="absolute -left-[33px] flex items-center justify-center w-8 h-8 rounded-full {{ $transaction->status == 'completed' ? 'bg-brand-accent text-white border-4 border-white shadow-glow' : 'bg-brand-surface text-brand-dark border-4 border-white' }}">
-                             @if($transaction->status == 'completed')
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            @else
-                                <span class="text-xs font-bold">4</span>
-                            @endif
+                    @foreach($steps as $key => $step)
+                        @php
+                            $index = array_search($key, $statuses);
+                            $isActive = $index <= $currentIndex;
+                            $isCurrent = $index === $currentIndex;
+                            $isLast = $loop->last;
+                        @endphp
+                        
+                        <div class="relative flex items-start group mb-8 {{ $isLast ? 'mb-0' : '' }}">
+                            <!-- Dot Indicator -->
+                            <div class="relative flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full z-10 transition-all duration-300
+                                {{ $isActive ? 'bg-gradient-to-br from-brand-primary to-brand-deep shadow-lg' : 'bg-gray-200' }}
+                                {{ $isCurrent ? 'ring-4 ring-brand-primary/30' : '' }}
+                            ">
+                                @if($isActive)
+                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                @else
+                                    <span class="text-sm font-bold text-gray-500">{{ $loop->iteration }}</span>
+                                @endif
+                            </div>
+
+                            <!-- Text Content -->
+                            <div class="ml-6 flex-1 transition-all duration-300 {{ $isActive ? 'opacity-100' : 'opacity-50' }}">
+                                <h3 class="text-base font-bold text-gray-900 {{ $isCurrent ? 'text-brand-primary' : '' }}">{{ $step['title'] }}</h3>
+                                <p class="text-sm text-gray-500 leading-relaxed mt-1">{{ $step['desc'] }}</p>
+                                @if($isCurrent)
+                                    <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-semibold">
+                                        <span class="w-1.5 h-1.5 bg-brand-primary rounded-full mr-2"></span>
+                                        Status Saat Ini
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                        <h3 class="{{ $transaction->status == 'completed' ? 'text-lg font-bold text-brand-black' : 'text-lg font-medium text-brand-dark/60' }}">Selesai</h3>
-                        <p class="text-sm text-brand-dark/60">Terima kasih telah mempercayakan laundry Anda.</p>
-                    </div>
+                    @endforeach
                 </div>
             </div>
 
-            <!-- Items Detail -->
-            <div class="bg-white rounded-3xl shadow-soft border border-brand-surface overflow-hidden">
-                <div class="px-8 py-6 border-b border-brand-surface bg-brand-subtle/30">
-                    <h3 class="font-display text-lg font-bold text-brand-black">Rincian Layanan</h3>
+            <!-- Glassmorphism Items Detail -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/50 overflow-hidden">
+                <div class="px-8 py-6 border-b border-gray-100 bg-white/50 flex justify-between items-center">
+                    <h3 class="font-display text-lg font-bold text-gray-900">Rincian Layanan</h3>
+                    <span class="text-xs font-medium text-gray-400 font-mono">Invoice: #{{ $transaction->transaction_code }}</span>
                 </div>
-                <div class="p-8">
+                <div class="p-0">
                     <table class="w-full text-sm text-left">
-                        <thead class="text-brand-dark text-xs uppercase bg-brand-subtle/50 rounded-lg">
+                        <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider">
                             <tr>
-                                <th class="px-4 py-3 font-semibold rounded-l-lg">Layanan</th>
-                                <th class="px-4 py-3 font-semibold text-center">Qty</th>
-                                <th class="px-4 py-3 font-semibold text-right rounded-r-lg">Total</th>
+                                <th class="px-8 py-4 font-semibold">Layanan</th>
+                                <th class="px-4 py-4 font-semibold text-center">Qty</th>
+                                <th class="px-8 py-4 font-semibold text-right">Total</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-brand-surface">
+                        <tbody class="divide-y divide-gray-100">
                             @foreach($transaction->details as $detail)
-                            <tr>
-                                <td class="px-4 py-4 font-medium text-brand-black">
-                                    {{ $detail->service->service_name }}
-                                    <div class="text-xs text-brand-dark font-normal mt-0.5">{{ $detail->service->unit }} • Rp {{ number_format($detail->price_at_transaction, 0, ',', '.') }}</div>
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-8 py-5 font-medium text-gray-900">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-brand-primary flex items-center justify-center mr-3">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                        </div>
+                                        <div>
+                                            {{ $detail->service->service_name }}
+                                            <div class="text-xs text-gray-400 font-normal mt-0.5">{{ $detail->service->unit }} • Rp {{ number_format($detail->price_at_transaction, 0, ',', '.') }}</div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-4 text-center text-brand-dark">{{ $detail->quantity }}</td>
-                                <td class="px-4 py-4 text-right font-bold text-brand-black">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                                <td class="px-4 py-5 text-center text-gray-600 bg-gray-50/20 font-mono">{{ $detail->quantity }}</td>
+                                <td class="px-8 py-5 text-right font-bold text-gray-900">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
-                        <tfoot class="border-t-2 border-brand-surface">
+                        <tfoot class="bg-gray-50/80 border-t border-gray-200">
                             <tr>
-                                <td colspan="2" class="px-4 pt-6 text-right font-medium text-brand-dark">Total Tagihan</td>
-                                <td class="px-4 pt-6 text-right text-xl font-display font-bold text-brand-primary">Rp {{ number_format($transaction->total_cost, 0, ',', '.') }}</td>
+                                <td colspan="2" class="px-8 py-6 text-right font-medium text-gray-600">Total Tagihan</td>
+                                <td class="px-8 py-6 text-right text-xl font-display font-bold text-brand-primary">Rp {{ number_format($transaction->total_cost, 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -116,71 +134,77 @@
         </div>
 
         <!-- Right Column: Info & Payment -->
-        <div class="space-y-8">
+        <div class="space-y-6">
             
-            <!-- Customer Info -->
-            <div class="bg-white rounded-3xl shadow-soft p-8 border border-brand-surface">
-                <h3 class="font-display text-lg font-bold text-brand-black mb-6">Informasi Pelanggan</h3>
-                <div class="space-y-4">
-                    <div class="flex items-start">
-                        <div class="w-8 h-8 rounded-full bg-brand-subtle flex items-center justify-center text-brand-primary mr-3 flex-shrink-0">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <!-- Customer Info Card -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-soft p-8 border border-white/50">
+                <h3 class="font-display text-lg font-bold text-gray-900 mb-6">Informasi Pelanggan</h3>
+                <div class="space-y-6">
+                    <div class="flex items-center group">
+                        <div class="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center mr-4 group-hover:bg-brand-primary group-hover:text-white transition-colors duration-300 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         </div>
                         <div>
-                            <p class="text-xs text-brand-dark">Nama Pelanggan</p>
-                            <p class="font-semibold text-brand-black">{{ $transaction->customer->name }}</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Nama Pelanggan</p>
+                            <p class="font-semibold text-gray-900 text-lg">{{ $transaction->customer->name }}</p>
                         </div>
                     </div>
-                    <div class="flex items-start">
-                        <div class="w-8 h-8 rounded-full bg-brand-subtle flex items-center justify-center text-brand-primary mr-3 flex-shrink-0">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <div class="flex items-center group">
+                        <div class="w-10 h-10 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mr-4 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </div>
                         <div>
-                            <p class="text-xs text-brand-dark">Kode Nota</p>
-                            <p class="font-family-mono font-bold text-brand-black">{{ $transaction->transaction_code }}</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Kode Nota</p>
+                            <p class="font-family-mono font-bold text-gray-900 text-lg tracking-wide">{{ $transaction->transaction_code }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Payment Card -->
-            <div class="bg-gradient-to-br from-brand-primary to-brand-deep rounded-3xl shadow-lg p-8 text-white relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+            <!-- Payment Card (Premium Gradient) -->
+            <div class="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden group">
+                <!-- Decorative Elements -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-20 rounded-full -mr-20 -mt-20 blur-3xl group-hover:opacity-30 transition-opacity duration-700"></div>
+                <div class="absolute bottom-0 left-0 w-40 h-40 bg-purple-500 opacity-20 rounded-full -ml-10 -mb-10 blur-2xl group-hover:opacity-30 transition-opacity duration-700"></div>
                 
-                <h3 class="font-display text-lg font-bold mb-1 opacity-90">Status Pembayaran</h3>
+                <h3 class="font-display text-lg font-medium mb-1 opacity-80 relative z-10">Status Pembayaran</h3>
                 
                 @if($transaction->payment_status == 'paid')
-                    <div class="mt-4 flex items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-brand-deep mr-3 shadow-glow">
-                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <div class="mt-6 flex flex-col items-center justify-center py-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative z-10">
+                        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-green-500/30 animate-bounce-slow">
+                             <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <div>
-                            <p class="font-bold text-lg">LUNAS</p>
-                            <p class="text-xs opacity-75">Terima kasih atas pembayaran Anda</p>
-                        </div>
+                        <p class="font-bold text-2xl tracking-tight">LUNAS</p>
+                        <p class="text-sm opacity-60 mt-1">Pembayaran Terverifikasi</p>
                     </div>
                 @else
-                    <div class="mt-4 mb-6">
-                        <p class="text-3xl font-display font-bold mb-1">Rp {{ number_format($transaction->total_cost - $transaction->total_paid, 0, ',', '.') }}</p>
-                        <p class="text-sm opacity-75">Sisa tagihan yang harus dibayar</p>
+                    <div class="mt-6 mb-8 relative z-10">
+                        <p class="text-4xl font-display font-bold mb-2 tracking-tight">Rp {{ number_format($transaction->total_cost - $transaction->total_paid, 0, ',', '.') }}</p>
+                        <p class="text-sm opacity-60 font-medium bg-white/10 inline-block px-3 py-1 rounded-full">Belum Dibayar</p>
                     </div>
                     
                     <button 
                         id="pay-button" 
-                        class="w-full py-4 bg-white text-brand-deep font-bold rounded-xl shadow-lg hover:bg-brand-surface transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 ring-2 ring-transparent focus:ring-white"
+                        class="relative z-10 w-full py-4 bg-white text-gray-900 font-bold rounded-2xl shadow-lg hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden group/btn"
                     >
-                        <span class="text-lg">Bayar Online (QRIS)</span>
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span class="absolute inset-0 bg-gradient-to-r from-gray-100 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></span>
+                        <span class="relative text-lg">Bayar Sekarang (QRIS)</span>
+                        <svg class="relative w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </button>
-                    <div id="payment-loading" class="hidden text-center mt-3 text-sm opacity-80 animate-pulse">Menghubungkan ke Payment Gateway...</div>
+                    <div id="payment-loading" class="hidden text-center mt-4 text-sm opacity-80 animate-pulse flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Memproses Pembayaran...
+                    </div>
                 @endif
             </div>
 
             <!-- Help Contact -->
-            <div class="text-center">
-                <a href="https://wa.me/6281234567890" class="inline-flex items-center text-brand-primary font-medium hover:text-brand-deep transition-colors text-sm">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 4.255 4.045-.809c1.306.391 2.934.332 4.091-.32 1.454-1.002 1.559-2.28 1.559-2.28s1.618-.475 2.106-.723c.316-.16.536-.341.602-.551.053-.169.034-.959-.39-1.282-.249-.19-.714-.403-.984-.537-.253-.122-.505-.175-.765.234-.239.375-.515.753-.787.893-.243.125-.975-.125-2.062-1.218-.949-.953-1.161-1.636-1.047-1.896.16-.364.673-1.144.757-1.341.077-.183.024-.467-.146-.739-.148-.236-1.161-1.954-1.161-1.954s-.308-.432-.619-.387a1.4 1.4 0 0 0-.573.182z"/></svg>
-                    Hubungi Bantuan via WhatsApp
+            <div class="text-center pt-4">
+                <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/\D/', '', config('app.phone'))) }}" class="inline-flex items-center text-gray-500 font-medium hover:text-brand-primary transition-colors text-sm group">
+                    <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 4.255 4.045-.809c1.306.391 2.934.332 4.091-.32 1.454-1.002 1.559-2.28 1.559-2.28s1.618-.475 2.106-.723c.316-.16.536-.341.602-.551.053-.169.034-.959-.39-1.282-.249-.19-.714-.403-.984-.537-.253-.122-.505-.175-.765.234-.239.375-.515.753-.787.893-.243.125-.975-.125-2.062-1.218-.949-.953-1.161-1.636-1.047-1.896.16-.364.673-1.144.757-1.341.077-.183.024-.467-.146-.739-.148-.236-1.161-1.954-1.161-1.954s-.308-.432-.619-.387a1.4 1.4 0 0 0-.573.182z"/></svg>
+                    </span>
+                    Butuh bantuan? Hubungi WhatsApp kami
                 </a>
             </div>
 

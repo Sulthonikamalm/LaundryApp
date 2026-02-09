@@ -37,9 +37,11 @@ class AdminResource extends Resource
                 Forms\Components\Card::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
+                            ->label('Nama Lengkap')
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('email')
+                            ->label('Email')
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
@@ -50,9 +52,11 @@ class AdminResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->maxLength(50),
                         Forms\Components\TextInput::make('phone_number')
+                            ->label('No. Telepon')
                             ->tel()
                             ->maxLength(20),
                         Forms\Components\Select::make('role')
+                            ->label('Peran')
                             ->options([
                                 'owner' => 'Owner',
                                 'kasir' => 'Kasir',
@@ -95,11 +99,14 @@ class AdminResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nama')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->label('Email')
                     ->searchable(),
                 Tables\Columns\BadgeColumn::make('role')
+                    ->label('Peran')
                     ->colors([
                         'primary' => 'owner',
                         'success' => 'kasir',
@@ -115,6 +122,7 @@ class AdminResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
+                    ->label('Peran')
                     ->options([
                         'owner' => 'Owner',
                         'kasir' => 'Kasir',

@@ -18,9 +18,19 @@ class EditCustomer extends EditRecord
 
         // DeepSecurity: Delete hanya untuk Owner
         if (auth()->user()?->isOwner()) {
-            $actions[] = Actions\DeleteAction::make();
-            $actions[] = Actions\ForceDeleteAction::make();
-            $actions[] = Actions\RestoreAction::make();
+            $actions[] = Actions\DeleteAction::make()
+                ->label('Hapus')
+                ->modalHeading('Hapus Pelanggan')
+                ->modalButton('Ya, Hapus');
+                
+            $actions[] = Actions\ForceDeleteAction::make()
+                ->label('Hapus Permanen')
+                ->modalHeading('Hapus Permanen Pelanggan')
+                ->modalButton('Ya, Hapus Selamanya');
+                
+            $actions[] = Actions\RestoreAction::make()
+                ->label('Pulihkan')
+                ->modalButton('Ya, Pulihkan');
         }
 
         return $actions;
@@ -29,5 +39,13 @@ class EditCustomer extends EditRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getSaveFormAction()->label('Simpan Perubahan'),
+            $this->getCancelFormAction()->label('Batal'),
+        ];
     }
 }

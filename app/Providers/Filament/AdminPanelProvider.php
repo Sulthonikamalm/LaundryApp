@@ -52,45 +52,55 @@ class AdminPanelProvider extends ServiceProvider
     protected function getCustomCss(): string
     {
         return '
-        <!-- DeepGreen Design System v2.0 -->
+        <!-- DeepGreen Design System v3.0 (Premium Edition) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         
         <style>
             /* =================================================
-               DEEPGREEN DESIGN SYSTEM - FILAMENT ADMIN OVERRIDE
+               DEEPGREEN PREMIUM DESIGN SYSTEM
                =================================================
-               DeepUI: Warna konsisten dengan brand.
-               DeepThinking: Tidak ada referensi "Laravel/Filament".
+               DeepUI: Glassmorphism + Soft Shadows + Premium Feel
             */
             
             :root {
-                /* DeepGreen Palette (Light Mode) */
-                --dg-black: #2e2d2c;
-                --dg-dark: #3a4643;
-                --dg-deep: #44625c;
-                --dg-primary: #4c7d73;
-                --dg-medium: #569a8c;
-                --dg-light: #5cb9a6;
-                --dg-accent: #60d9c3;
-                --dg-surface: #b1ece0;
-                --dg-subtle: #d7f5ef;
-                --dg-white: #ecfaf6;
+                /* Premium Color Palette */
+                --dg-black: #0f172a;
+                --dg-dark: #334155;
+                --dg-deep: #0369a1;
+                --dg-primary: #0ea5e9;
+                --dg-medium: #38bdf8;
+                --dg-light: #e0f2fe;
+                --dg-accent: #7dd3fc;
+                --dg-surface: #f8fafc;
+                --dg-subtle: #f1f5f9;
+                --dg-white: #ffffff;
                 
-                /* Filament CSS Variables Override */
-                --primary-50: 236 250 246;
-                --primary-100: 215 245 239;
-                --primary-200: 177 236 224;
-                --primary-300: 96 217 195;
-                --primary-400: 92 185 166;
-                --primary-500: 86 154 140;
-                --primary-600: 76 125 115;
-                --primary-700: 68 98 92;
-                --primary-800: 58 70 67;
-                --primary-900: 46 45 44;
+                /* Glassmorphism */
+                --glass-bg: rgba(255, 255, 255, 0.7);
+                --glass-border: rgba(255, 255, 255, 0.3);
+                --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
                 
-                /* Warning Override - Gold instead of Yellow */
+                /* Premium Shadows */
+                --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+                --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+                --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+                --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.12);
+                
+                /* Filament Override */
+                --primary-50: 240 249 255;
+                --primary-100: 224 242 254;
+                --primary-200: 186 230 253;
+                --primary-300: 125 211 252;
+                --primary-400: 56 189 248;
+                --primary-500: 14 165 233;
+                --primary-600: 2 132 199;
+                --primary-700: 3 105 161;
+                --primary-800: 7 89 133;
+                --primary-900: 12 74 110;
+                
+                /* Warning Override - Amber */
                 --warning-50: 255 251 235;
                 --warning-100: 254 243 199;
                 --warning-200: 253 230 138;
@@ -102,77 +112,216 @@ class AdminPanelProvider extends ServiceProvider
                 --warning-800: 146 64 14;
                 --warning-900: 120 53 15;
                 
-                /* Danger/Error - Keep Red but softer */
+                /* Danger/Error - Red */
                 --danger-600: 220 38 38;
             }
 
-            /* Dark Mode Variables */
             .dark {
-                --dg-black: #ecfaf6;
-                --dg-dark: #d7f5ef;
-                --dg-deep: #b1ece0;
-                --dg-primary: #60d9c3;
-                --dg-medium: #5cb9a6;
-                --dg-light: #569a8c;
-                --dg-accent: #4c7d73;
-                --dg-surface: #3a4643;
-                --dg-subtle: #2e2d2c;
-                --dg-white: #1a1a1a;
+                --dg-black: #f8fafc;
+                --dg-dark: #e2e8f0;
+                --dg-surface: #1e293b;
+                --dg-subtle: #0f172a;
+                --glass-bg: rgba(30, 41, 59, 0.7);
+                --glass-border: rgba(255, 255, 255, 0.1);
             }
 
-            /* Typography Override */
+            /* Typography Override - Inter */
             body, .font-sans, .filament-body {
-                font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif !important;
+                font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
                 -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                letter-spacing: -0.011em;
             }
             
             h1, h2, h3, h4, h5, h6, 
             .font-display,
             .filament-sidebar-brand span,
             .filament-header h1 {
-                font-family: "Outfit", ui-sans-serif, system-ui, sans-serif !important;
+                font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+                font-weight: 700 !important;
+                letter-spacing: -0.025em !important;
+            }
+
+            /* =====================================================
+               GLASSMORPHISM CARDS (Premium)
+               ===================================================== */
+            .filament-card,
+            .fi-section,
+            .filament-widget-card,
+            .filament-stats-overview-widget-card,
+            .filament-tables-container {
+                background: var(--glass-bg) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid var(--glass-border) !important;
+                border-radius: 1.25rem !important;
+                box-shadow: var(--shadow-lg) !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            }
+
+            .dark .filament-card,
+            .dark .fi-section,
+            .dark .filament-widget-card,
+            .dark .filament-stats-overview-widget-card,
+            .dark .filament-tables-container {
+                background: rgba(30, 41, 59, 0.8) !important;
+                border-color: rgba(255, 255, 255, 0.08) !important;
+            }
+
+            /* Premium Hover Effect */
+            .filament-stats-overview-widget-card:hover,
+            .filament-widget-card:hover {
+                transform: translateY(-4px) !important;
+                box-shadow: var(--shadow-xl) !important;
+            }
+
+            /* Stats Card Premium */
+            .filament-stats-overview-widget-card {
+                padding: 1.75rem !important;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .filament-stats-overview-widget-card::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .filament-stats-overview-widget-card:hover::before {
+                opacity: 1;
+            }
+
+            /* Stats Values with Gradient */
+            .filament-stats-overview-widget-card .filament-stats-card-value {
+                font-size: 2rem !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.03em !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
             }
 
             /* Sidebar Brand Override */
+            .filament-sidebar {
+                background: var(--glass-bg) !important;
+                backdrop-filter: blur(20px) !important;
+                border-right: 1px solid var(--glass-border) !important;
+                box-shadow: var(--shadow-md) !important;
+            }
+
+            .dark .filament-sidebar {
+                background: rgba(15, 23, 42, 0.95) !important;
+            }
+
             .filament-sidebar-brand {
-                font-family: "Outfit", sans-serif !important;
-                font-weight: 700 !important;
-                letter-spacing: -0.025em !important;
+                font-family: "Inter", sans-serif !important;
+                font-weight: 800 !important;
+                font-size: 1.5rem !important;
+                letter-spacing: -0.03em !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                padding: 1.5rem !important;
+            }
+
+            /* Sidebar Items Premium */
+            .filament-sidebar-item {
+                margin: 0.25rem 0.75rem !important;
+                border-radius: 0.875rem !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .filament-sidebar-item:hover {
+                background: rgba(14, 165, 233, 0.08) !important;
+                transform: translateX(4px) !important;
             }
 
             /* Sidebar Active Item */
             .filament-sidebar-item-active,
             .filament-sidebar-item[aria-current="page"] {
-                background-color: rgba(76, 125, 115, 0.15) !important;
-                color: var(--dg-primary) !important;
-                border-color: var(--dg-primary) !important;
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(56, 189, 248, 0.1) 100%) !important;
+                border-left: 3px solid #0ea5e9 !important;
+                font-weight: 600 !important;
             }
 
             .dark .filament-sidebar-item-active,
             .dark .filament-sidebar-item[aria-current="page"] {
-                background-color: rgba(96, 217, 195, 0.15) !important;
-                color: var(--dg-accent) !important;
+                background: rgba(56, 189, 248, 0.15) !important;
+                color: var(--dg-primary) !important;
             }
 
             /* Primary Buttons */
             .filament-button,
             .fi-btn-primary,
             [type="submit"].filament-button {
-                background-color: var(--dg-primary) !important;
-                border-color: var(--dg-primary) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+                border: none !important;
+                border-radius: 0.75rem !important;
+                padding: 0.75rem 1.5rem !important;
+                font-weight: 600 !important;
+                letter-spacing: -0.011em !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
             
             .filament-button:hover,
             .fi-btn-primary:hover {
-                background-color: var(--dg-deep) !important;
-                border-color: var(--dg-deep) !important;
+                transform: translateY(-2px) !important;
+                box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4) !important;
+            }
+
+            .filament-button:active {
+                transform: translateY(0) !important;
             }
 
             .dark .filament-button,
             .dark .fi-btn-primary {
-                background-color: var(--dg-accent) !important;
-                border-color: var(--dg-accent) !important;
-                color: #1a1a1a !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+                color: #ffffff !important;
+            }
+
+            /* Premium Inputs */
+            input[type="text"],
+            input[type="email"],
+            input[type="password"],
+            input[type="search"],
+            input[type="number"],
+            input[type="tel"],
+            textarea,
+            select {
+                background: var(--glass-bg) !important;
+                backdrop-filter: blur(10px) !important;
+                border: 1.5px solid var(--glass-border) !important;
+                border-radius: 0.75rem !important;
+                padding: 0.75rem 1rem !important;
+                transition: all 0.2s ease !important;
+                font-weight: 500 !important;
+            }
+
+            input:focus,
+            textarea:focus,
+            select:focus {
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1) !important;
+                outline: none !important;
+                background: #ffffff !important;
+            }
+
+            .dark input,
+            .dark textarea,
+            .dark select {
+                background: rgba(30, 41, 59, 0.6) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                color: #e2e8f0 !important;
             }
 
             /* Text Colors */
@@ -180,28 +329,66 @@ class AdminPanelProvider extends ServiceProvider
                 color: var(--dg-primary) !important; 
             }
             .dark .text-primary-600, .dark .text-primary-500 { 
-                color: var(--dg-accent) !important; 
+                color: var(--dg-primary) !important; 
             }
             
             .bg-primary-600, .bg-primary-500 { 
                 background-color: var(--dg-primary) !important; 
             }
             .dark .bg-primary-600, .dark .bg-primary-500 { 
-                background-color: var(--dg-accent) !important; 
+                background-color: var(--dg-primary) !important; 
             }
 
-            /* Warning Badge Override (Gold/Amber) */
+            /* Warning Badge Override */
             .text-warning-700, .text-warning-600 {
                 color: #b45309 !important;
             }
             .bg-warning-500, .bg-warning-600 {
                 background-color: #f59e0b !important;
             }
-            .dark .text-warning-700, .dark .text-warning-600 {
-                color: #fcd34d !important;
+
+            /* Premium Tables */
+            .filament-tables-container {
+                border-radius: 1.25rem !important;
+                overflow: hidden !important;
             }
-            .dark .bg-warning-500, .dark .bg-warning-600 {
-                background-color: #d97706 !important;
+
+            .filament-tables-header {
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(56, 189, 248, 0.03) 100%) !important;
+                padding: 1.5rem !important;
+                border-bottom: 1px solid var(--glass-border) !important;
+            }
+
+            .filament-tables-header h2 {
+                font-size: 1.5rem !important;
+                font-weight: 700 !important;
+                color: var(--dg-black) !important;
+                letter-spacing: -0.025em !important;
+            }
+
+            .filament-tables-row {
+                transition: all 0.2s ease !important;
+                border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+            }
+
+            .filament-tables-row:hover {
+                background: rgba(14, 165, 233, 0.04) !important;
+                transform: scale(1.001) !important;
+            }
+
+            .dark .filament-tables-row:hover {
+                background: rgba(56, 189, 248, 0.08) !important;
+            }
+
+            /* Premium Badges */
+            .filament-tables-badge,
+            .fi-badge {
+                border-radius: 0.625rem !important;
+                padding: 0.375rem 0.875rem !important;
+                font-weight: 600 !important;
+                font-size: 0.8125rem !important;
+                letter-spacing: 0.01em !important;
+                backdrop-filter: blur(8px) !important;
             }
 
             /* Clean Dashboard - Remove Footer & Documentation Links */
@@ -213,31 +400,33 @@ class AdminPanelProvider extends ServiceProvider
 
             /* Login Page */
             .filament-login-page {
-                background: linear-gradient(135deg, #ecfaf6 0%, #d7f5ef 100%) !important;
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%) !important;
             }
             .dark .filament-login-page {
-                background: linear-gradient(135deg, #1a1a1a 0%, #2e2d2c 100%) !important;
+                background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%) !important;
             }
 
             /* Cards & Surfaces */
             .filament-card,
             .fi-section,
             .filament-tables-container {
-                border-color: rgba(177, 236, 224, 0.5) !important;
+                animation: fadeInUp 0.5s ease-out;
             }
-            .dark .filament-card,
-            .dark .fi-section,
-            .dark .filament-tables-container {
-                border-color: rgba(58, 70, 67, 0.5) !important;
+
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             /* Stats Widget Cards */
             .filament-stats-overview-widget-card {
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-            .filament-stats-overview-widget-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 25px -5px rgba(76, 125, 115, 0.1);
+                animation: fadeInUp 0.5s ease-out;
             }
 
             /* Loading States */
@@ -247,143 +436,151 @@ class AdminPanelProvider extends ServiceProvider
 
             /* Custom Scrollbar */
             ::-webkit-scrollbar {
-                width: 8px;
-                height: 8px;
+                width: 10px;
+                height: 10px;
             }
             ::-webkit-scrollbar-track {
-                background: rgba(215, 245, 239, 0.5);
+                background: transparent;
             }
             ::-webkit-scrollbar-thumb {
-                background: var(--dg-medium);
-                border-radius: 4px;
+                background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+                border-radius: 10px;
+                border: 2px solid transparent;
+                background-clip: padding-box;
             }
             ::-webkit-scrollbar-thumb:hover {
-                background: var(--dg-primary);
-            }
-            .dark ::-webkit-scrollbar-track {
-                background: rgba(46, 45, 44, 0.5);
-            }
-            .dark ::-webkit-scrollbar-thumb {
-                background: var(--dg-deep);
+                background: linear-gradient(135deg, #94a3b8, #64748b);
+                background-clip: padding-box;
             }
 
             /* Table Row Hover */
             .filament-tables-row:hover {
-                background-color: rgba(215, 245, 239, 0.3) !important;
+                background-color: #f8fafc !important; /* slate-50 */
             }
             .dark .filament-tables-row:hover {
-                background-color: rgba(58, 70, 67, 0.3) !important;
+                background-color: rgba(255, 255, 255, 0.03) !important;
             }
 
             /* Focus Ring Override */
             *:focus {
-                --tw-ring-color: rgba(76, 125, 115, 0.5) !important;
+                --tw-ring-color: rgba(14, 165, 233, 0.4) !important;
             }
             .dark *:focus {
-                --tw-ring-color: rgba(96, 217, 195, 0.5) !important;
-            }
-
-            /* Skeleton Loading Animation */
-            @keyframes skeleton-pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-            .skeleton {
-                animation: skeleton-pulse 1.5s ease-in-out infinite;
-                background: linear-gradient(90deg, #d7f5ef 25%, #ecfaf6 50%, #d7f5ef 75%);
-                background-size: 200% 100%;
-            }
-            .dark .skeleton {
-                background: linear-gradient(90deg, #3a4643 25%, #44625c 50%, #3a4643 75%);
+                --tw-ring-color: rgba(56, 189, 248, 0.4) !important;
             }
 
             /* =====================================================
                DeepUI FIX: Table Header Alignment (Universal Fix)
                ===================================================== */
             
-            /* Target generic header container in Filament Tables */
+            /* Target generic header container in Filament Tables & Widgets */
             .filament-tables-header, 
             .fi-ta-header,
+            .filament-widget-card > header,
+            .filament-tables-container > header,
             [class*="filament-tables-header-container"],
             div:has(> .filament-tables-header-heading) {
                 display: flex !important;
-                flex-wrap: wrap;
+                flex-wrap: nowrap !important;
                 align-items: center !important;
                 justify-content: space-between !important;
-                gap: 1rem;
-                padding: 1rem 1rem 1rem 0.5rem !important; /* DeepUI: Geser kiri */
+                gap: 1rem !important;
+                padding: 1rem !important;
             }
 
-            /* Widget Card Header - Geser ke kiri */
-            .filament-widget-card > header,
-            .filament-tables-container > header,
-            .filament-widget header {
-                padding-left: 0.5rem !important;
-                text-align: left !important;
+            /* Widget Heading Container - Force Horizontal Layout */
+            .filament-widget-card > header > div,
+            .filament-tables-header > div:first-child {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+                gap: 1rem !important;
             }
 
-            /* Widget Heading - Geser ke kiri */
+            /* Heading + Description Wrapper */
             .filament-widget-card h2,
             .filament-widget header h3,
-            .filament-tables-header h2 {
-                margin-left: 0 !important;
-                padding-left: 0 !important;
-                text-align: left !important;
-            }
-
-            /* Force Heading to take available space */
+            .filament-tables-header h2,
             .filament-tables-header-heading,
-            .fi-ta-header-heading,
-            h2.filament-tables-heading {
-                flex: 1;
-                min-width: 200px;
-                margin-bottom: 0 !important;
+            .fi-ta-header-heading {
+                flex: 1 !important;
+                min-width: 200px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                text-align: left !important;
+                color: var(--dg-black) !important;
+            }
+            
+            .dark .filament-widget-card h2,
+            .dark .filament-widget header h3,
+            .dark .filament-tables-header h2 {
+                color: var(--dg-dark) !important;
             }
 
-            /* Container actions/search */
+            /* Description - Keep Below Heading but in Same Container */
+            .filament-tables-header p,
+            .filament-widget-card header p,
+            .fi-ta-header-description {
+                display: block !important;
+                width: 100% !important;
+                margin-top: 0.25rem !important;
+                color: #64748b !important;
+                font-size: 0.875rem !important;
+                line-height: 1.5 !important;
+            }
+
+            /* Search Container - Force Right Side */
+            .filament-tables-search-container,
             .filament-tables-header-actions,
-            .fi-ta-actions,
-            .filament-tables-search-container {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
+            .fi-ta-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+                margin-left: auto !important;
+                flex-shrink: 0 !important;
             }
 
-            /* Specific Search Input Fix */
+            /* Search Input Styling */
             input[type="search"],
             .filament-tables-search-input input {
                 min-width: 250px !important;
+                border-radius: 0.5rem !important;
             }
 
-            /* Description positioning - FORCE BREAK LINE */
-            .filament-tables-header p,
-            .filament-tables-header .text-sm:not(.filament-tables-search-input input),
-            .fi-ta-header-description {
-                 flex-basis: 100%;
-                 width: 100%;
-                 margin-top: 0.25rem;
-                 color: var(--dg-medium);
-                 font-size: 0.875rem;
-                 order: 3; /* Ensure description is visually last */
-                 line-height: 1.25;
+            /* Widget Specific - Heading & Search Side by Side */
+            .filament-widget-card > header {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                justify-content: space-between !important;
+                gap: 1rem !important;
             }
 
-            /* Actions Container - Keep inline with heading */
-            .filament-tables-header-actions,
-            .filament-tables-search-container {
-                order: 2; /* Search next to Heading (1) */
-                margin-left: auto; /* Push to right */
+            /* Left Side: Heading + Description */
+            .filament-widget-card > header > div:first-child {
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            /* Right Side: Search/Actions */
+            .filament-widget-card > header > div:last-child {
+                flex-shrink: 0 !important;
+                display: flex !important;
+                align-items: center !important;
             }
 
             /* Alert Widget Styling - Red Border */
-            .filament-widget[class*="Overdue"],
-            .filament-widget[class*="overdue"] {
-                border-left: 6px solid #ef4444 !important;
+            .filament-widget[class*="LatestTransactions"],
+            .filament-widget[class*="Overdue"] {
+                border-left: 4px solid #ef4444 !important;
                 background-color: #fef2f2 !important;
             }
             
-            .dark .filament-widget[class*="Overdue"],
-            .dark .filament-widget[class*="overdue"] {
+            .dark .filament-widget[class*="LatestTransactions"],
+            .dark .filament-widget[class*="Overdue"] {
                 background-color: rgba(69, 10, 10, 0.4) !important;
                 border-color: #ef4444 !important;
             }

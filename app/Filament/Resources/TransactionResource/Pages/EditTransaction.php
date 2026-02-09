@@ -18,21 +18,36 @@ class EditTransaction extends EditRecord
 
         // DeepSecurity: Tombol delete hanya muncul untuk Owner
         if (auth()->user()?->isOwner()) {
-            $actions[] = Actions\DeleteAction::make();
-            $actions[] = Actions\ForceDeleteAction::make();
-            $actions[] = Actions\RestoreAction::make();
+            $actions[] = Actions\DeleteAction::make()
+                ->label('Hapus')
+                ->modalHeading('Hapus Transaksi')
+                ->modalButton('Ya, Hapus');
+            $actions[] = Actions\ForceDeleteAction::make()
+                ->label('Hapus Permanen')
+                ->modalHeading('Hapus Permanen')
+                ->modalButton('Ya, Hapus Selamanya');
+            $actions[] = Actions\RestoreAction::make()
+                ->label('Pulihkan')
+                ->modalButton('Ya, Pulihkan');
         }
 
         return $actions;
     }
 
-    /**
-     * Redirect after save.
-     * 
-     * @return string
-     */
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getSaveFormAction()
+                ->label('Simpan Perubahan')
+                ->icon('heroicon-o-check'),
+            $this->getCancelFormAction()
+                ->label('Batal')
+                ->icon('heroicon-o-x'),
+        ];
     }
 }

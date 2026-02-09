@@ -17,7 +17,9 @@ class ViewService extends ViewRecord
         $actions = [];
 
         if (auth()->user()?->isOwner()) {
-            $actions[] = Actions\EditAction::make();
+            $actions[] = Actions\EditAction::make()
+                ->label('Ubah')
+                ->icon('heroicon-o-pencil');
         }
 
         return $actions;

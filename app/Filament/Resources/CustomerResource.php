@@ -178,22 +178,41 @@ class CustomerResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Lihat'),
                 Tables\Actions\EditAction::make()->label('Ubah'),
-                Tables\Actions\DeleteAction::make()->label('Hapus')
+                Tables\Actions\DeleteAction::make()
+                    ->label('Hapus')
                     ->modalHeading('Hapus Pelanggan')
                     ->modalSubheading('Apakah Anda yakin ingin menghapus pelanggan ini?')
                     ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
+                Tables\Actions\RestoreAction::make()
+                    ->label('Pulihkan')
+                    ->modalButton('Ya, Pulihkan')
+                    ->visible(fn () => auth()->user()?->isOwner()),
+                 Tables\Actions\ForceDeleteAction::make()
+                    ->label('Hapus Permanen')
+                    ->modalHeading('Hapus Permanen')
+                    ->modalButton('Ya, Hapus Selama-lamanya')
+                    ->visible(fn () => auth()->user()?->isOwner()),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()->label('Hapus Terpilih')
+                Tables\Actions\DeleteBulkAction::make()
+                    ->label('Hapus Terpilih')
                     ->modalHeading('Hapus Pelanggan Terpilih')
                     ->modalSubheading('Apakah Anda yakin ingin menghapus data yang dipilih?')
                     ->modalButton('Ya, Hapus')
                     ->visible(fn () => auth()->user()?->isOwner()),
-                Tables\Actions\RestoreBulkAction::make()->label('Pulihkan')
+                Tables\Actions\RestoreBulkAction::make()
+                    ->label('Pulihkan Terpilih')
+                    ->modalHeading('Pulihkan Pelanggan')
+                    ->modalButton('Ya, Pulihkan')
+                    ->visible(fn () => auth()->user()?->isOwner()),
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->label('Hapus Permanen Terpilih')
+                    ->modalHeading('Hapus Permanen')
+                    ->modalButton('Ya, Hapus Selamanya')
                     ->visible(fn () => auth()->user()?->isOwner()),
             ])
-            ->defaultSort('name', 'asc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array

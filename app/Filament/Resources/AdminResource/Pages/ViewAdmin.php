@@ -13,7 +13,9 @@ class ViewAdmin extends ViewRecord
     protected function getActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->label('Ubah')
+                ->icon('heroicon-o-pencil'),
         ];
     }
 }
