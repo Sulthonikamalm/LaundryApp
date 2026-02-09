@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -49,7 +50,8 @@ class TrackingController extends Controller
         ]);
 
         $transactionCode = strtoupper(trim($validated['transaction_code']));
-        $phone = $this->normalizePhone($validated['phone']);
+        // DeepCode: Gunakan PhoneHelper untuk normalisasi
+        $phone = PhoneHelper::normalizeLocal($validated['phone']);
 
         // DeepSecrethacking: Rate limiting - 5 attempts per minute per IP
         $rateLimitKey = 'tracking:' . $request->ip();
@@ -68,14 +70,15 @@ class TrackingController extends Controller
         $cacheKey = "tracking:{$transactionCode}:{$phone}";
         
         $transaction = Cache::remember($cacheKey, 120, function () use ($transactionCode, $phone) {
+            // DeepPerformance: Eager load semua relasi untuk mencegah N+1 query
             return Transaction::with([
                 'customer', 
                 'details.service', 
                 'payments', 
-                'shipments',
+                'shipments.courier', // DeepFix: Load courier untuk shipment
                 'statusLogs' => function ($query) {
                     // DeepVisual: Load logs dengan foto, urutkan terbaru dulu
-                    $query->with('changedBy')
+                    $query->with('changedBy') // DeepFix: Eager load admin yang mengubah status
                           ->orderBy('created_at', 'desc');
                 }
             ])
@@ -113,13 +116,14 @@ class TrackingController extends Controller
      */
     public function showByToken(string $token): View
     {
+        // DeepPerformance: Eager load semua relasi untuk mencegah N+1 query
         $transaction = Transaction::with([
             'customer', 
             'details.service', 
             'payments', 
-            'shipments',
+            'shipments.courier', // DeepFix: Load courier untuk shipment
             'statusLogs' => function ($query) {
-                $query->with('changedBy')
+                $query->with('changedBy') // DeepFix: Eager load admin yang mengubah status
                       ->orderBy('created_at', 'desc');
             }
         ])
@@ -129,25 +133,6 @@ class TrackingController extends Controller
         return view('public.tracking-result', [
             'transaction' => $transaction,
         ]);
-    }
-
-    /**
-     * Normalize phone number format.
-     * 
-     * @param string $phone
-     * @return string
-     */
-    protected function normalizePhone(string $phone): string
-    {
-        // Remove non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-        
-        // Handle +62 prefix
-        if (str_starts_with($phone, '62')) {
-            $phone = '0' . substr($phone, 2);
-        }
-        
-        return $phone;
     }
 
     /**

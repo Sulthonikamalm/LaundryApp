@@ -70,6 +70,8 @@ class CloudinaryService
     /**
      * Generic upload method.
      * 
+     * DeepSecurity: Validasi MIME type sebelum upload.
+     * 
      * @param UploadedFile $file
      * @param string $folder
      * @param string $filename
@@ -77,6 +79,19 @@ class CloudinaryService
      */
     protected function upload(UploadedFile $file, string $folder, string $filename): ?string
     {
+        // DeepSecurity: Validasi MIME type - hanya terima gambar
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!in_array($file->getMimeType(), $allowedMimes)) {
+            Log::error("CloudinaryService: Invalid MIME type {$file->getMimeType()}");
+            throw new \InvalidArgumentException('File harus berupa gambar (JPEG, PNG, atau WebP)');
+        }
+
+        // DeepSecurity: Validasi ukuran file (max 5MB)
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            Log::error("CloudinaryService: File too large " . $file->getSize() . " bytes");
+            throw new \InvalidArgumentException('Ukuran file maksimal 5MB');
+        }
+
         // Fallback ke local storage jika Cloudinary tidak dikonfigurasi
         if (!$this->cloudinary) {
             return $this->uploadToLocal($file, $filename, $folder);
@@ -101,9 +116,10 @@ class CloudinaryService
 
             return $result['secure_url'];
         } catch (\Exception $e) {
+            // DeepSecurity: Log detail error, tapi jangan expose ke user
             Log::error("Cloudinary upload failed: {$e->getMessage()}");
             
-            // Fallback ke local
+            // Fallback ke local storage
             return $this->uploadToLocal($file, $filename, $folder);
         }
     }

@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use Illuminate\Support\Facades\Config;
 use App\Models\Transaction;
+use App\Services\FonnteService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * CheckOverdueTransactionsJob
@@ -60,14 +59,14 @@ class CheckOverdueTransactionsJob implements ShouldQueue
                         'days_late' => now()->diffInDays($transaction->estimated_completion_date),
                     ]);
 
-                    // Kirim notifikasi ke admin/customer
+                    // DeepNotification: Kirim notifikasi ke customer
                     $message = "Halo {$transaction->customer->name},\n\n"
                         . "Cucian Anda dengan kode *{$transaction->transaction_code}* terlambat dari estimasi selesai ({$transaction->estimated_completion_date->format('d M Y')}).\n"
                         . "Mohon maaf atas keterlambatan ini. Kami sedang memprosesnya secepat mungkin.\n\n"
                         . "Terima kasih,\n" . config('app.name');
 
                     if ($transaction->customer->phone_number) {
-                        \App\Services\WhatsAppService::send($transaction->customer->phone_number, $message);
+                        FonnteService::sendMessage($transaction->customer->phone_number, $message);
                     }
                 }
             });

@@ -24,4 +24,25 @@ class Service extends Model
         'base_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * DeepCode: Relationship - Service digunakan di banyak transaksi.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function transactionDetails()
+    {
+        return $this->hasMany(TransactionDetail::class);
+    }
+
+    /**
+     * DeepCode: Scope untuk service aktif.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

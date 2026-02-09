@@ -47,13 +47,16 @@ class DriverAuthController extends Controller
             'pin' => 'required|string|size:6',
         ]);
 
-        // DeepSecurity: Rate limiting - 3 attempts per 5 minutes
+        // DeepSecurity: STRICT rate limiting - 3 attempts per 10 minutes (lebih ketat)
+        // DeepReasoning: PIN 6 digit = 1 juta kombinasi, dengan 3 attempts/10min = max 432 attempts/day
+        // Probabilitas brute force berhasil dalam 1 hari: 0.0432% (sangat rendah)
         $rateLimitKey = 'driver_login:' . $request->ip();
         
         if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
             $seconds = RateLimiter::availableIn($rateLimitKey);
+            $minutes = ceil($seconds / 60);
             return back()->withErrors([
-                'pin' => "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik.",
+                'pin' => "Terlalu banyak percobaan login. Coba lagi dalam {$minutes} menit.",
             ]);
         }
 
@@ -67,7 +70,7 @@ class DriverAuthController extends Controller
             ->first();
 
         if (!$driver) {
-            RateLimiter::hit($rateLimitKey, 300); // 5 menit
+            RateLimiter::hit($rateLimitKey, 600); // 10 menit (lebih lama)
             return back()->withErrors([
                 'username' => 'Akun tidak ditemukan atau tidak aktif.',
             ])->withInput(['username' => $validated['username']]);
@@ -75,7 +78,7 @@ class DriverAuthController extends Controller
 
         // DeepSecurity: Verify hashed PIN
         if (!$driver->pin || !Hash::check($validated['pin'], $driver->pin)) {
-            RateLimiter::hit($rateLimitKey, 300);
+            RateLimiter::hit($rateLimitKey, 600); // 10 menit (lebih lama)
             return back()->withErrors([
                 'pin' => 'PIN tidak valid.',
             ])->withInput(['username' => $validated['username']]);

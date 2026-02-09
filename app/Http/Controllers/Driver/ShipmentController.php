@@ -34,35 +34,42 @@ class ShipmentController extends Controller
      * Driver dashboard - list assigned deliveries.
      * 
      * DeepPerformance: Cached query + limit untuk responsiveness.
-     * DeepLogic: Hanya tampilkan tugas yang ditugaskan ke driver ini.
+     * DeepSecurity: STRICT - Hanya tampilkan tugas yang ditugaskan ke driver ini.
      * 
      * @return View
      */
     public function dashboard(): View
     {
         $driver = auth()->guard('driver')->user();
+        
+        // DeepSecurity: Verify driver is active
+        if (!$driver->is_active) {
+            auth()->guard('driver')->logout();
+            return redirect()->route('driver.login')
+                ->withErrors(['error' => 'Akun Anda tidak aktif. Hubungi admin.']);
+        }
+        
         $cacheKey = "driver_dashboard_{$driver->id}";
 
         // DeepPerformance: Cache dashboard data for 30 seconds
         $data = Cache::remember($cacheKey, 30, function () use ($driver) {
-            // DeepFilter: Tugas yang ditugaskan ke driver ini
-            // Status: pending (baru ditugaskan) atau picked_up (sedang diantar)
+            // DeepSecurity: STRICT filter - hanya tugas driver ini
             $myTasks = Shipment::with([
                 'transaction:id,transaction_code,customer_id,total_cost,delivery_address',
                 'transaction.customer:id,name,address,phone_number'
             ])
-                ->where('courier_id', $driver->id)
+                ->where('courier_id', $driver->id) // CRITICAL: Filter by authenticated driver
                 ->whereIn('status', ['pending', 'picked_up'])
                 ->orderBy('assigned_at', 'asc')
                 ->limit(20)
                 ->get();
 
-            // History: Tugas yang sudah selesai hari ini
+            // History: Tugas yang sudah selesai hari ini (STRICT filter)
             $completedToday = Shipment::with([
                 'transaction:id,transaction_code,customer_id',
                 'transaction.customer:id,name'
             ])
-                ->where('courier_id', $driver->id)
+                ->where('courier_id', $driver->id) // CRITICAL: Filter by authenticated driver
                 ->where('status', 'delivered')
                 ->whereDate('completed_at', today())
                 ->orderBy('completed_at', 'desc')
@@ -148,8 +155,9 @@ class ShipmentController extends Controller
      */
     public function complete(Request $request, Transaction $transaction): RedirectResponse
     {
+        // DeepSecurity: MIME type validation untuk mencegah upload file berbahaya
         $validated = $request->validate([
-            'proof_photo' => 'required|image|max:5120', // Max 5MB
+            'proof_photo' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120', // Max 5MB, hanya gambar
             'notes' => 'nullable|string|max:500',
         ]);
 

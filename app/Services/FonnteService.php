@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\PhoneHelper;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -19,12 +20,14 @@ class FonnteService
         $token = env('FONNTE_TOKEN');
         $endpoint = env('FONNTE_ENDPOINT', 'https://api.fonnte.com/send');
 
+        // DeepSecurity: Jangan expose detail konfigurasi ke user
         if (empty($token)) {
             Log::error('[FonnteService] Token is missing in configuration.');
-            return ['success' => false, 'message' => 'Token is missing in configuration'];
+            return ['success' => false, 'message' => 'Konfigurasi WhatsApp tidak lengkap. Hubungi admin.'];
         }
 
-        $sanitizedTarget = self::sanitizePhoneNumber($target);
+        // DeepCode: Gunakan PhoneHelper untuk normalisasi
+        $sanitizedTarget = PhoneHelper::normalize($target);
 
         try {
             $response = Http::withHeaders([
@@ -60,37 +63,15 @@ class FonnteService
 
                 return ['success' => true, 'message' => 'Message sent successfully'];
             } else {
-                // DeepDebug: Log HTTP error details
+                // DeepSecurity: Log detail error, tapi jangan expose ke user
                 $errorMsg = 'HTTP Error ' . $response->status() . ': ' . $response->body();
                 Log::error('[FonnteService] ' . $errorMsg);
-                return ['success' => false, 'message' => $errorMsg];
+                return ['success' => false, 'message' => 'Gagal mengirim pesan WhatsApp. Silakan coba lagi.'];
             }
         } catch (\Exception $e) {
-            $errorMsg = 'Connection Exception: ' . $e->getMessage();
-            Log::error('[FonnteService] ' . $errorMsg);
-            return ['success' => false, 'message' => $errorMsg];
+            // DeepSecurity: Log exception detail, tapi jangan expose ke user
+            Log::error('[FonnteService] Connection Exception: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Koneksi ke server WhatsApp gagal. Silakan coba lagi.'];
         }
-    }
-
-    /**
-     * Sanitize phone number to ensure it starts with 62.
-     *
-     * @param string $phone
-     * @return string
-     */
-    private static function sanitizePhoneNumber(string $phone): string
-    {
-        // Remove non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-
-        // If starts with 0, replace with 62
-        if (str_starts_with($phone, '0')) {
-            $phone = '62' . substr($phone, 1);
-        }
-
-        // If starts with 62, keep it. 
-        // If it doesn't start with 62 (and didn't start with 0), we assume it's valid or can't be fixed safely.
-        
-        return $phone;
     }
 }

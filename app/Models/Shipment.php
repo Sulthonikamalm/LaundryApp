@@ -29,13 +29,45 @@ class Shipment extends Model
         'assigned_at' => 'datetime',
     ];
 
+    /**
+     * DeepCode: Relationship - Shipment belongs to Transaction.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function transaction()
     {
         return $this->belongsTo(Transaction::class);
     }
 
+    /**
+     * DeepCode: Relationship - Shipment belongs to Courier (Admin).
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function courier()
     {
         return $this->belongsTo(Admin::class, 'courier_id');
+    }
+
+    /**
+     * DeepCode: Scope untuk shipment aktif (belum selesai).
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['pending', 'picked_up']);
+    }
+
+    /**
+     * DeepCode: Scope untuk shipment yang sudah selesai.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'delivered');
     }
 }
