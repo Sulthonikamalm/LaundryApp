@@ -61,7 +61,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 // SSL Configuration untuk TiDB Cloud
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('APP_ENV') === 'local' ? false : true,
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('APP_ENV') === 'production' ? false : false, // Disable SSL verification for TiDB Cloud
                 PDO::ATTR_PERSISTENT => false, // Disable persistent untuk cloud deployment
                 PDO::ATTR_TIMEOUT => 10, // Timeout lebih lama untuk cloud
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",

@@ -17,9 +17,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // DeepPerformance: Disable debug bar in production
-        if ($this->app->isProduction()) {
-            $this->app['config']->set('app.debug', false);
-        }
+        // COMMENTED: Allow APP_DEBUG from .env to work in production for troubleshooting
+        // if ($this->app->isProduction()) {
+        //     $this->app['config']->set('app.debug', false);
+        // }
     }
 
     /**

@@ -23,10 +23,10 @@ return new class extends Migration
                 ->default('pending')
                 ->after('status');
             
-            // Audit trail
-            $table->foreignId('approved_by')->nullable()->after('processed_by')->constrained('admins')->nullOnDelete();
-            $table->timestamp('approved_at')->nullable()->after('approved_by');
-            $table->text('rejection_reason')->nullable()->after('approved_at');
+            // Audit trail - tanpa posisi spesifik untuk menghindari error
+            $table->foreignId('approved_by')->nullable()->constrained('admins')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+            $table->text('rejection_reason')->nullable();
             
             // Performance index
             $table->index(['gateway_status', 'created_at'], 'idx_gateway_status_created');
