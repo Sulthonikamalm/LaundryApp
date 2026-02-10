@@ -419,7 +419,7 @@
 </div>
 
 @if($transaction->payment_status != 'paid')
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+{{-- DeepPayment: Dual-mode payment script (Demo + Midtrans) --}}
 <script>
     const payButton = document.getElementById('pay-button');
     const loadingText = document.getElementById('payment-loading');
@@ -431,8 +431,8 @@
         loadingText.classList.remove('hidden');
         
         try {
-            // 1. Get Snap Token from Backend
-            const response = await fetch("{{ route('public.payment.token', $transaction->id) }}", {
+            // 1. Initiate Payment (Gateway-agnostic)
+            const response = await fetch("{{ route('public.payment.initiate', $transaction->id) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -440,39 +440,133 @@
                 }
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (!response.ok) throw new Error(data.message || 'Gagal memulai pembayaran');
+            if (!result.success) throw new Error(result.message || 'Gagal memulai pembayaran');
 
-            // 2. Open Snap Popup
-            window.snap.pay(data.snap_token, {
-                onSuccess: function(result) {
-                    window.location.reload();
-                },
-                onPending: function(result) {
-                    window.location.reload(); // Refresh to show pending state
-                },
-                onError: function(result) {
-                    alert('Pembayaran gagal, silakan coba lagi.');
-                    payButton.disabled = false;
-                    payButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    loadingText.classList.add('hidden');
-                },
-                onClose: function() {
-                    payButton.disabled = false;
-                    payButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    loadingText.classList.add('hidden');
-                }
-            });
+            // 2. Handle based on gateway type
+            if (result.gateway === 'demo') {
+                // Demo Mode: Show QR Modal
+                showDemoPaymentModal(result.data);
+            } else if (result.gateway === 'midtrans') {
+                // Midtrans Mode: Open Snap Popup
+                // UNCOMMENT WHEN MIDTRANS IS ACTIVE
+                /*
+                window.snap.pay(result.data.snap_token, {
+                    onSuccess: function(result) {
+                        window.location.href = "{{ route('public.payment.success', $transaction->id) }}";
+                    },
+                    onPending: function(result) {
+                        window.location.href = "{{ route('public.payment.success', $transaction->id) }}";
+                    },
+                    onError: function(result) {
+                        alert('Pembayaran gagal, silakan coba lagi.');
+                        resetButton();
+                    },
+                    onClose: function() {
+                        resetButton();
+                    }
+                });
+                */
+                throw new Error('Midtrans gateway is currently disabled');
+            }
 
         } catch (error) {
             alert(error.message);
-            payButton.disabled = false;
-            payButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            loadingText.classList.add('hidden');
+            resetButton();
         }
     });
+
+    function resetButton() {
+        payButton.disabled = false;
+        payButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        loadingText.classList.add('hidden');
+    }
+
+    function showDemoPaymentModal(paymentData) {
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in';
+        modal.innerHTML = `
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-brand-primary to-purple-600 px-8 py-6 text-white">
+                    <h3 class="text-2xl font-bold mb-1">Scan QR Code</h3>
+                    <p class="text-sm opacity-90">Bayar dengan aplikasi mobile banking Anda</p>
+                </div>
+
+                <!-- QR Code -->
+                <div class="p-8 text-center">
+                    <div class="bg-gray-50 rounded-2xl p-6 mb-6 inline-block">
+                        <img src="${paymentData.qr_url}" alt="QR Code" class="w-64 h-64 mx-auto">
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-left">
+                        <p class="text-sm text-blue-900 leading-relaxed">
+                            <strong>📱 Cara Bayar:</strong><br>
+                            1. Buka aplikasi mobile banking<br>
+                            2. Pilih menu QRIS/Scan QR<br>
+                            3. Scan QR code di atas<br>
+                            4. Konfirmasi pembayaran<br>
+                            5. Klik tombol "Saya Sudah Bayar" di bawah
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Pembayaran</span>
+                            <span class="text-xl font-bold text-gray-900">Rp {{ number_format($transaction->getRemainingBalance(), 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <form action="{{ route('public.payment.confirm', $transaction->id) }}" method="POST" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="payment_id" value="${paymentData.payment_id}">
+                        
+                        <button type="submit" class="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Saya Sudah Bayar
+                        </button>
+                        
+                        <button type="button" onclick="this.closest('.fixed').remove(); resetButton();" class="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-2xl hover:bg-gray-200 transition-all duration-300">
+                            Batal
+                        </button>
+                    </form>
+
+                    <p class="text-xs text-gray-400 mt-4">
+                        QR Code berlaku selama 24 jam
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        resetButton();
+    }
 </script>
+
+<style>
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes scale-in {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+}
+.animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+}
+</style>
+
+{{-- Midtrans Snap Script (UNCOMMENT WHEN SWITCHING TO PRODUCTION) --}}
+{{-- <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script> --}}
 @endif
 
 @push('scripts')

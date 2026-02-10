@@ -130,14 +130,24 @@ class CloudinaryService
      * @param UploadedFile $file
      * @param string $filename
      * @param string $folder
-     * @return string
+     * @return string|null
      */
-    protected function uploadToLocal(UploadedFile $file, string $filename, string $folder = 'delivery-proofs'): string
+    protected function uploadToLocal(UploadedFile $file, string $filename, string $folder = 'delivery-proofs'): ?string
     {
-        $fullFilename = $filename . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs($folder, $fullFilename, 'public');
-        
-        return asset('storage/' . $path);
+        try {
+            $fullFilename = $filename . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($folder, $fullFilename, 'public');
+            
+            if (!$path) {
+                Log::error("Local storage upload failed for {$filename}");
+                return null;
+            }
+            
+            return asset('storage/' . $path);
+        } catch (\Exception $e) {
+            Log::error("Local storage upload exception: {$e->getMessage()}");
+            return null;
+        }
     }
 
     /**

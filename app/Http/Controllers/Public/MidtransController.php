@@ -190,7 +190,8 @@ class MidtransController extends Controller
     /**
      * Create Snap token for payment.
      * 
-     * DeepUI: Generate payment URL untuk pelanggan.
+     * DEPRECATED: Use PaymentController@initiate instead
+     * Kept for backward compatibility with old tracking page
      * 
      * @param Request $request
      * @param Transaction $transaction
@@ -198,16 +199,19 @@ class MidtransController extends Controller
      */
     public function createSnapToken(Request $request, Transaction $transaction): JsonResponse
     {
-        // DeepPerformance: Eager load relations to prevent lazy loading exception in local env
-        $transaction->load(['customer', 'details.service']);
-
-        $remainingBalance = $transaction->total_cost - $transaction->total_paid;
+        $remainingBalance = $transaction->getRemainingBalance();
 
         if ($remainingBalance <= 0) {
             return response()->json(['error' => 'Transaksi sudah lunas'], 400);
         }
 
-        // Midtrans configuration
+        // Check if Midtrans is configured
+        if (!config('services.midtrans.server_key')) {
+            return response()->json(['error' => 'Payment gateway not configured'], 500);
+        }
+
+        $transaction->load(['customer', 'details.service']);
+
         \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
         \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
         \Midtrans\Config::$isSanitized = true;

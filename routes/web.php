@@ -27,7 +27,17 @@ Route::get('/login', function () {
     return redirect()->route('filament.auth.login');
 })->name('login');
 
-// Payment Gateway Routes
+// Payment Routes (Public)
+Route::post('/payment/{transaction}/initiate', [\App\Http\Controllers\Public\PaymentController::class, 'initiate'])
+    ->name('public.payment.initiate');
+Route::post('/payment/{transaction}/confirm', [\App\Http\Controllers\Public\PaymentController::class, 'confirm'])
+    ->name('public.payment.confirm');
+Route::get('/payment/{transaction}/success', [\App\Http\Controllers\Public\PaymentController::class, 'success'])
+    ->name('public.payment.success');
+
+// Payment Gateway Routes (Keep for Midtrans webhook - UNCOMMENT WHEN ACTIVE)
+// Route::post('/payment/webhook/midtrans', [\App\Http\Controllers\Public\MidtransController::class, 'webhook'])
+//     ->name('public.payment.webhook.midtrans');
 Route::post('/payment/token/{transaction}', [\App\Http\Controllers\Public\MidtransController::class, 'createSnapToken'])
     ->name('public.payment.token');
 

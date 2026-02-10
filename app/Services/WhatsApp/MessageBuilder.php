@@ -31,6 +31,11 @@ abstract class MessageBuilder
     /**
      * Get tracking URL.
      * 
+     * DeepProduction: Always use APP_URL from config
+     * CRITICAL: Set APP_URL correctly in Koyeb environment variables!
+     * 
+     * Example Koyeb APP_URL: https://your-app-name.koyeb.app
+     * 
      * @return string
      */
     protected function getTrackingUrl(): string

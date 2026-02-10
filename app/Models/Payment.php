@@ -24,6 +24,11 @@ class Payment extends Model
         'amount',
         'payment_method', // cash, transfer, qris
         'status', // pending, completed, failed
+        'gateway_provider', // demo, midtrans
+        'gateway_status', // pending, approved, rejected, completed
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
         'payment_proof_url',
         'transaction_reference',
         'notes',

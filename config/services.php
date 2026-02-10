@@ -38,4 +38,19 @@ return [
         'url' => env('CLOUDINARY_URL'),
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+        'endpoint' => env('FONNTE_ENDPOINT', 'https://api.fonnte.com/send'),
+    ],
+
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    ],
+
+    'payment' => [
+        'gateway' => env('PAYMENT_GATEWAY', 'demo'), // 'demo' or 'midtrans'
+    ],
+
 ];
