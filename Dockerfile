@@ -6,13 +6,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
     git \
     curl
 
 # Install Driver Database & Lainnya
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Aktifkan Modul Rewrite Apache (Wajib untuk Laravel)
 RUN a2enmod rewrite
