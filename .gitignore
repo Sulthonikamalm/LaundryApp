@@ -6,8 +6,11 @@
 /storage/*.key
 /vendor
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
+.env.koyeb
 Homestead.json
 Homestead.yaml
 auth.json
