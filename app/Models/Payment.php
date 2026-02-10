@@ -84,4 +84,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Admin::class, 'processed_by');
     }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(Admin::class, 'approved_by');
+    }
 }

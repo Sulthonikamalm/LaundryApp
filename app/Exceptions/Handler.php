@@ -42,29 +42,7 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            // Log to stderr for Koyeb logs
-            error_log($e->getMessage());
-            error_log($e->getTraceAsString());
+            //
         });
-    }
-    
-    /**
-     * Render an exception into an HTTP response.
-     * Temporary: Show detailed errors for debugging deployment
-     */
-    public function render($request, Throwable $e)
-    {
-        // If in production and debugging deployment issues
-        if (config('app.env') === 'production' && config('app.debug') === false) {
-            // Log the full error
-            \Log::error('Production Error: ' . $e->getMessage(), [
-                'exception' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-        
-        return parent::render($request, $e);
     }
 }
