@@ -59,12 +59,13 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
+                // SSL Configuration untuk TiDB Cloud
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, // DeepFix: Disable SSL verification for local
-                PDO::ATTR_PERSISTENT => true, // DeepPerformance: Persistent connection
-                PDO::ATTR_TIMEOUT => 5, // DeepPerformance: Connection timeout 5s
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('APP_ENV') === 'local' ? false : true,
+                PDO::ATTR_PERSISTENT => false, // Disable persistent untuk cloud deployment
+                PDO::ATTR_TIMEOUT => 10, // Timeout lebih lama untuk cloud
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
-                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true, // DeepPerformance: Buffer results
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
             ]) : [],
         ],
 
