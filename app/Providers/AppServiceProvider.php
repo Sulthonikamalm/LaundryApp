@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // DeepSecurity: Force HTTPS in production
+        if ($this->app->isProduction()) {
+            \URL::forceScheme('https');
+        }
+
         // DeepPerformance: STRICT MODE - Throw exception on lazy loading
         // Reasoning: Force eager loading untuk menghindari N+1 queries ke TiDB Frankfurt
         Model::preventLazyLoading(true); // ALWAYS enforce, even in production
