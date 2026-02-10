@@ -27,6 +27,13 @@ WORKDIR /var/www/html
 # Copy Semua Kode ke Server
 COPY . .
 
+# Buat folder cache yang diperlukan Laravel sebelum composer install
+RUN mkdir -p storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
+
 # Install Library PHP
 RUN composer install --no-dev --optimize-autoloader
 
