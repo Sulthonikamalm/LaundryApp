@@ -27,14 +27,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // DeepSecurity: Force HTTPS in production
-        if ($this->app->isProduction()) {
-            \URL::forceScheme('https');
+        // DeepSecurity: Force HTTPS in production (safe check)
+        if ($this->app->environment('production') && config('app.url') && str_starts_with(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
         }
 
         // DeepPerformance: STRICT MODE - Throw exception on lazy loading
         // Reasoning: Force eager loading untuk menghindari N+1 queries ke TiDB Frankfurt
-        Model::preventLazyLoading(true); // ALWAYS enforce, even in production
+        Model::preventLazyLoading(!$this->app->isProduction()); // Disable in production to avoid crashes
 
         // DeepPerformance: Disable unnecessary Eloquent events
         Model::preventAccessingMissingAttributes(!$this->app->isProduction());
