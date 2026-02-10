@@ -27,8 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // DeepSecurity: Force HTTPS in production (safe check)
-        if ($this->app->environment('production') && config('app.url') && str_starts_with(config('app.url'), 'https://')) {
+        // DeepSecurity: Force HTTPS in production
+        if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 
